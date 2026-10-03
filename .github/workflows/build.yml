@@ -18,22 +18,32 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Gradle 8.9
+      - name: Set up Gradle 8.11.1
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.11.1"
 
       - name: Install Android SDK packages
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0"
 
       - name: Build debug APK
         working-directory: android
         run: gradle :app:assembleDebug --no-daemon
+
+      - name: Build release bundle
+        working-directory: android
+        run: gradle :app:bundleRelease --no-daemon
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: apex-argus-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-argus-release-bundle
+          path: android/app/build/outputs/bundle/release/app-release.aab
