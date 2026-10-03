@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Minimal wind glyph: three horizontal strokes with tapered ends. -->
+    <path
+        android:fillColor="#C79A3B"
+        android:pathData="M22,40 L70,40 L66,34 L78,40 L66,46 L70,40 L22,40 Z" />
+    <path
+        android:fillColor="#C79A3B"
+        android:pathData="M22,54 L86,54 L82,48 L94,54 L82,60 L86,54 L22,54 Z" />
+    <path
+        android:fillColor="#C79A3B"
+        android:pathData="M22,68 L62,68 L58,62 L70,68 L58,74 L62,68 L22,68 Z" />
+    <!-- Small cloud arc above the wind lines. -->
+    <path
+        android:fillColor="#E8EAF0"
+        android:pathData="M54,22 m-10,0 a10,10 0 1,0 20,0 a8,8 0 1,0 -20,0 Z" />
+</vector>

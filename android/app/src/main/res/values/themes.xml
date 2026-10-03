@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Activity theme. Compose draws the real UI; this only styles the window. -->
+    <style name="Theme.ApexArgus" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/apex_background</item>
+        <item name="android:statusBarColor">@color/apex_background</item>
+        <item name="android:navigationBarColor">@color/apex_background</item>
+    </style>
+</resources>
