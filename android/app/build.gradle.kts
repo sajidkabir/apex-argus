@@ -36,6 +36,19 @@ android {
     }
 
     flavorDimensions += "dist"
+
+    signingConfigs {
+        // Used only by the release workflow, which provides the keystore
+        // through environment secrets. Local builds skip signing.
+        // Declared before productFlavors: flavors reference it by name.
+        create("githubRelease") {
+            storeFile = file(System.getenv("GITHUB_KEYSTORE_PATH") ?: "missing.keystore")
+            storePassword = System.getenv("GITHUB_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("GITHUB_KEY_ALIAS")
+            keyPassword = System.getenv("GITHUB_KEY_PASSWORD")
+        }
+    }
+
     productFlavors {
         // Distributed through Google Play. Must stay free of any
         // self-update mechanism: Play policy forbids updating a Play
@@ -53,16 +66,6 @@ android {
         }
     }
 
-    signingConfigs {
-        // Used only by the release workflow, which provides the keystore
-        // through environment secrets. Local builds skip signing.
-        create("githubRelease") {
-            storeFile = file(System.getenv("GITHUB_KEYSTORE_PATH") ?: "missing.keystore")
-            storePassword = System.getenv("GITHUB_KEYSTORE_PASSWORD")
-            keyAlias = System.getenv("GITHUB_KEY_ALIAS")
-            keyPassword = System.getenv("GITHUB_KEY_PASSWORD")
-        }
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
