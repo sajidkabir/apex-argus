@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -28,17 +29,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.apexpredator.argus.data.ReportKind
 import com.apexpredator.argus.ui.MainViewModel
+import com.apexpredator.argus.ui.UpdateUiState
 import com.apexpredator.argus.ui.theme.ApexTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(vm: MainViewModel, onOpenHistory: () -> Unit, onOpenRadar: () -> Unit) {
+    LaunchedEffect(Unit) { vm.checkForUpdates() }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,6 +61,8 @@ fun HomeScreen(vm: MainViewModel, onOpenHistory: () -> Unit, onOpenRadar: () -> 
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            UpdateBanner(vm)
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -174,6 +180,108 @@ fun HomeScreen(vm: MainViewModel, onOpenHistory: () -> Unit, onOpenRadar: () -> 
                     Text("History")
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun UpdateBanner(vm: MainViewModel) {
+    when (val s = vm.updateState) {
+        is UpdateUiState.Available -> {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "Apex Argus ${s.info.versionName} is available",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "You are on ${currentVersionName()}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ApexTextSecondary
+                    )
+                    Button(
+                        onClick = {
+                            if (vm.isPlayFlavor) vm.openPlayListing()
+                            else vm.downloadAndInstallUpdate()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (vm.isPlayFlavor) "Update on Google Play" else "Download and install")
+                    }
+                }
+            }
+        }
+        is UpdateUiState.Downloading -> {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "Downloading update… ${s.percent}%",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    LinearProgressIndicator(
+                        progress = { s.percent / 100f },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+        is UpdateUiState.Downloaded -> {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "Update downloaded",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "Allow \"install unknown apps\" for Apex Argus when asked, then confirm the install.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ApexTextSecondary
+                    )
+                    Button(
+                        onClick = { vm.installDownloadedUpdate() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Install now")
+                    }
+                }
+            }
+        }
+        else -> {}
+    }
+}
+
+@Composable
+private fun currentVersionName(): String {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    return androidx.compose.runtime.remember {
+        try {
+            ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: ""
+        } catch (e: Exception) {
+            ""
         }
     }
 }
