@@ -38,7 +38,7 @@ import com.apexpredator.argus.ui.theme.ApexTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(vm: MainViewModel, onOpenHistory: () -> Unit) {
+fun HomeScreen(vm: MainViewModel, onOpenHistory: () -> Unit, onOpenRadar: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -163,11 +163,16 @@ fun HomeScreen(vm: MainViewModel, onOpenHistory: () -> Unit) {
                 )
             }
 
-            OutlinedButton(
-                onClick = onOpenHistory,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+            Row(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("History")
+                OutlinedButton(onClick = onOpenRadar) {
+                    Text("Live radar")
+                }
+                OutlinedButton(onClick = onOpenHistory) {
+                    Text("History")
+                }
             }
         }
     }

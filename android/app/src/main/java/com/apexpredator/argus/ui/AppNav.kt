@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.apexpredator.argus.ui.screens.HistoryScreen
 import com.apexpredator.argus.ui.screens.HomeScreen
+import com.apexpredator.argus.ui.screens.RadarScreen
 import com.apexpredator.argus.ui.screens.ResultScreen
 
 @Composable
@@ -26,7 +27,14 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                     navController.navigate("result") { launchSingleTop = true }
                 }
             }
-            HomeScreen(vm = vm, onOpenHistory = { navController.navigate("history") })
+            HomeScreen(
+                vm = vm,
+                onOpenHistory = { navController.navigate("history") },
+                onOpenRadar = { navController.navigate("radar") }
+            )
+        }
+        composable("radar") {
+            RadarScreen(onBack = { navController.popBackStack() })
         }
         composable("result") {
             val current = vm.result

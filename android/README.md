@@ -18,6 +18,20 @@ Min SDK 26, target/compile SDK 35.
   temperature/dewpoint spread, altimeter/QNH, TAF change groups).
 - History: last 10 decoded reports stored locally with DataStore, tap to re-view.
 - Share: sends the plain-English decoded text through the Android share sheet.
+- Live radar (v1.1.0): OpenStreetMap view with live aircraft positions from the
+  OpenSky Network (anonymous access, no API key). Pan/zoom to explore, tap a
+  plane for callsign, altitude, speed, heading, vertical rate and squawk, or
+  jump the camera to any airport by ICAO code. Queries are clamped to a
+  5x5-degree window so each refresh costs 1 anonymous API credit; the map
+  auto-refreshes every 3 minutes.
+
+## Data sources
+
+- METAR/TAF and station coordinates: aviationweather.gov (no key needed).
+- Live aircraft positions: OpenSky Network `api/states/all` (anonymous,
+  400 credits/day; this app spends 1 credit per query).
+- Map tiles: OpenStreetMap. Flight data is community ADS-B coverage, so
+  oceanic and remote areas may show few or no aircraft.
 
 ## Privacy
 
