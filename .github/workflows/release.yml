@@ -1,9 +1,8 @@
 ---
-name: Publish GitHub release APK
-
 on:
   push:
     tags: ["v*"]
+
 
 jobs:
   release:
@@ -14,25 +13,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+
       - name: Set up Gradle 8.11.1
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: "8.11.1"
+
 
       - name: Install Android SDK packages
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0"
 
+
       - name: Restore signing keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/github-release.keystore
+
+
+      - name: Diagnose keystore
+        env:
+          GITHUB_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          GITHUB_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          sha256sum /tmp/github-release.keystore
+          keytool -list -keystore /tmp/github-release.keystore -storepass "$GITHUB_KEYSTORE_PASSWORD"
+          keytool -list -keystore /tmp/github-release.keystore -storepass "$GITHUB_KEYSTORE_PASSWORD" -alias "$GITHUB_KEY_ALIAS"
+
 
       - name: Build signed github APK
         working-directory: android
@@ -42,6 +56,7 @@ jobs:
           GITHUB_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           GITHUB_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle :app:assembleGithubRelease --no-daemon
+
 
       - name: Prepare release files
         run: |
@@ -55,6 +70,7 @@ jobs:
             "$VCODE" "$VNAME" "$TAG" "$APK_NAME" > version.json
           cat version.json
           echo
+
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
