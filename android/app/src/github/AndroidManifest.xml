@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged only into the github flavor. The Play flavor must NOT declare
+     this permission: Play policy forbids a Play-distributed app from
+     updating itself outside of Play. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+</manifest>

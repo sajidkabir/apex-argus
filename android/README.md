@@ -18,6 +18,20 @@ Min SDK 26, target/compile SDK 35.
   temperature/dewpoint spread, altimeter/QNH, TAF change groups).
 - History: last 10 decoded reports stored locally with DataStore, tap to re-view.
 - Share: sends the plain-English decoded text through the Android share sheet.
+- Live radar (v1.1.0): OpenStreetMap view with live aircraft positions from the
+  OpenSky Network (anonymous access, no API key). Pan/zoom to explore, tap a
+  plane for callsign, altitude, speed, heading, vertical rate and squawk, or
+  jump the camera to any airport by ICAO code. Queries are clamped to a
+  5x5-degree window so each refresh costs 1 anonymous API credit; the map
+  auto-refreshes every 3 minutes.
+
+## Data sources
+
+- METAR/TAF and station coordinates: aviationweather.gov (no key needed).
+- Live aircraft positions: OpenSky Network `api/states/all` (anonymous,
+  400 credits/day; this app spends 1 credit per query).
+- Map tiles: OpenStreetMap. Flight data is community ADS-B coverage, so
+  oceanic and remote areas may show few or no aircraft.
 
 ## Privacy
 
@@ -58,6 +72,26 @@ cd android
 ```
 
 The Gradle wrapper downloads Gradle 8.9 automatically on first run.
+
+## Distribution
+
+Two flavors, same app, different update channels:
+
+- **play** (`com.apexpredator.argus`): ships to Google Play. Checks for
+  updates against the GitHub releases and links to the Play Store listing,
+  because Play policy forbids a Play app from updating itself any other way.
+- **github** (`com.apexpredator.argus`): published as a signed APK on
+  [GitHub Releases](https://github.com/sajidkabir/apex-argus/releases),
+  downloadable by anyone with no login. The app checks for updates itself,
+  downloads the new APK, and hands it to the system installer (Android
+  always shows its own install confirmation; first install needs the
+  "install unknown apps" grant for Apex Argus).
+
+Pushing a version tag (`v1.1.0`) runs the release workflow: it builds the
+signed github APK and attaches it plus a `version.json` descriptor to the
+GitHub release. The APK is signed with a dedicated GitHub-release key, not
+the Play upload key, so switching between the GitHub APK and the Play
+build requires a reinstall (different signatures).
 No keystore or signing config is included on purpose: signing happens
 at release time with the Play App Signing upload key.
 
