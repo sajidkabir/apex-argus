@@ -32,6 +32,36 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    flavorDimensions += "dist"
+    productFlavors {
+        // Distributed through Google Play. Must stay free of any
+        // self-update mechanism: Play policy forbids updating a Play
+        // app by any means other than Play itself.
+        create("play") {
+            dimension = "dist"
+        }
+        // Distributed as a public APK on GitHub Releases. Carries the
+        // in-app updater (download + install new releases itself).
+        create("github") {
+            dimension = "dist"
+            if (System.getenv("GITHUB_KEYSTORE_PATH") != null) {
+                signingConfig = signingConfigs.getByName("githubRelease")
+            }
+        }
+    }
+
+    signingConfigs {
+        // Used only by the release workflow, which provides the keystore
+        // through environment secrets. Local builds skip signing.
+        create("githubRelease") {
+            storeFile = file(System.getenv("GITHUB_KEYSTORE_PATH") ?: "missing.keystore")
+            storePassword = System.getenv("GITHUB_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("GITHUB_KEY_ALIAS")
+            keyPassword = System.getenv("GITHUB_KEY_PASSWORD")
+        }
     }
     packaging {
         resources {

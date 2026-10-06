@@ -15,6 +15,13 @@ All notable changes to this project are documented here. The format follows
   on-ground state). Camera can jump to any airport by ICAO code via the
   aviationweather.gov station lookup. Bbox queries are clamped to 5x5 degrees
   (1 anonymous API credit each) and auto-refresh every 3 minutes.
+- In-app updates: the app checks the latest GitHub release on launch. The
+  github flavor (public APK) downloads and installs updates itself via the
+  system installer; the play flavor links to the Play Store listing, since
+  Play policy forbids self-updating a Play-distributed app.
+- Public APK distribution: pushing a version tag builds a signed github
+  APK and publishes it to GitHub Releases (no login needed to download),
+  with a `version.json` descriptor the in-app updater reads.
 
 ## [1.0.0] - 2026-10-01
 

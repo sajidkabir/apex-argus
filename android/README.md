@@ -72,6 +72,26 @@ cd android
 ```
 
 The Gradle wrapper downloads Gradle 8.9 automatically on first run.
+
+## Distribution
+
+Two flavors, same app, different update channels:
+
+- **play** (`com.apexpredator.argus`): ships to Google Play. Checks for
+  updates against the GitHub releases and links to the Play Store listing,
+  because Play policy forbids a Play app from updating itself any other way.
+- **github** (`com.apexpredator.argus`): published as a signed APK on
+  [GitHub Releases](https://github.com/sajidkabir/apex-argus/releases),
+  downloadable by anyone with no login. The app checks for updates itself,
+  downloads the new APK, and hands it to the system installer (Android
+  always shows its own install confirmation; first install needs the
+  "install unknown apps" grant for Apex Argus).
+
+Pushing a version tag (`v1.1.0`) runs the release workflow: it builds the
+signed github APK and attaches it plus a `version.json` descriptor to the
+GitHub release. The APK is signed with a dedicated GitHub-release key, not
+the Play upload key, so switching between the GitHub APK and the Play
+build requires a reinstall (different signatures).
 No keystore or signing config is included on purpose: signing happens
 at release time with the Play App Signing upload key.
 
