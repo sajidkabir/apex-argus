@@ -32,15 +32,15 @@ jobs:
 
       - name: Restore signing keystore
         run: |
-          echo "${{ secrets.GITHUB_KEYSTORE_BASE64 }}" | base64 -d > /tmp/github-release.keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/github-release.keystore
 
       - name: Build signed github APK
         working-directory: android
         env:
           GITHUB_KEYSTORE_PATH: /tmp/github-release.keystore
-          GITHUB_KEYSTORE_PASSWORD: ${{ secrets.GITHUB_KEYSTORE_PASSWORD }}
-          GITHUB_KEY_ALIAS: ${{ secrets.GITHUB_KEY_ALIAS }}
-          GITHUB_KEY_PASSWORD: ${{ secrets.GITHUB_KEY_PASSWORD }}
+          GITHUB_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          GITHUB_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          GITHUB_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle :app:assembleGithubRelease --no-daemon
 
       - name: Prepare release files
