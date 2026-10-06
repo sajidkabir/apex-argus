@@ -34,18 +34,17 @@ jobs:
 
 
       - name: Restore signing keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/github-release.keystore
-
-
-      - name: Diagnose keystore
         env:
-          GITHUB_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          GITHUB_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          sha256sum /tmp/github-release.keystore
-          keytool -list -keystore /tmp/github-release.keystore -storepass "$GITHUB_KEYSTORE_PASSWORD"
-          keytool -list -keystore /tmp/github-release.keystore -storepass "$GITHUB_KEYSTORE_PASSWORD" -alias "$GITHUB_KEY_ALIAS"
+          set -euo pipefail
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
+            -in android/keystore.enc -out /tmp/github-release.keystore \
+            -pass pass:"$KEYSTORE_PASSWORD"
+          echo "01f4e8ff1cd26c1eb7b99c3675a9c4f99fd462621564f53205a356280227e4f4  /tmp/github-release.keystore" | sha256sum -c -
+          keytool -list -keystore /tmp/github-release.keystore \
+            -storepass "$KEYSTORE_PASSWORD" -alias "$KEYSTORE_ALIAS"
 
 
       - name: Build signed github APK
