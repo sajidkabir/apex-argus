@@ -13,19 +13,31 @@ import org.osmdroid.views.overlay.Overlay
 import kotlin.math.hypot
 
 // Draws live aircraft as heading-rotated triangles on the osmdroid map.
-// Tap detection reuses the last drawn screen positions, so it stays in
-// sync with the current zoom and pan without extra projection math.
+// The v2 styling borrows from professional trackers: drones/UAVs are
+// orange diamonds, rotorcraft are teal, aircraft squawking an emergency
+// code (7500/7600/7700) get a red ring, and watched aircraft get a gold
+// ring. Tap detection reuses the last drawn screen positions, so it
+// stays in sync with the current zoom and pan.
 class AircraftOverlay(
     private val onSelect: (AircraftState) -> Unit,
 ) : Overlay() {
 
     private var aircraft: List<AircraftState> = emptyList()
+    var watchedHexes: Set<String> = emptySet()
     private val screenPos = HashMap<String, Point>()
     private val geoPoint = GeoPoint(0.0, 0.0)
 
     private val planePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         color = Color.parseColor("#C79A3B")
+    }
+    private val rotorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.parseColor("#2EC4B6")
+    }
+    private val uavPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.parseColor("#FF8A3D")
     }
     private val groundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
@@ -35,6 +47,16 @@ class AircraftOverlay(
         style = Paint.Style.STROKE
         strokeWidth = 2f
         color = Color.parseColor("#0D1117")
+    }
+    private val emergencyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 4f
+        color = Color.parseColor("#E53935")
+    }
+    private val watchedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+        color = Color.parseColor("#FFD54F")
     }
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#E8EAF0")
@@ -65,19 +87,41 @@ class AircraftOverlay(
             val y = tmp.y.toFloat()
             screenPos[ac.icao24] = Point(tmp.x, tmp.y)
 
-            val paint = if (ac.onGround) groundPaint else planePaint
-            val path = Path().apply {
-                moveTo(x, y - size)
-                lineTo(x + size * 0.7f, y + size * 0.7f)
-                lineTo(x, y + size * 0.3f)
-                lineTo(x - size * 0.7f, y + size * 0.7f)
-                close()
+            if (ac.isEmergency) {
+                canvas.drawCircle(x, y, size * 1.5f, emergencyPaint)
             }
-            canvas.save()
-            canvas.rotate((ac.trueTrackDeg ?: 0.0).toFloat(), x, y)
-            canvas.drawPath(path, paint)
-            canvas.drawPath(path, outlinePaint)
-            canvas.restore()
+            if (ac.icao24.lowercase() in watchedHexes) {
+                canvas.drawCircle(x, y, size * 1.25f, watchedPaint)
+            }
+
+            val paint = when {
+                ac.onGround -> groundPaint
+                ac.isUav -> uavPaint
+                ac.isRotorcraft -> rotorPaint
+                else -> planePaint
+            }
+            val path = Path()
+            if (ac.isUav) {
+                // Diamond for drones, so they read differently at a glance.
+                path.moveTo(x, y - size)
+                path.lineTo(x + size, y)
+                path.lineTo(x, y + size)
+                path.lineTo(x - size, y)
+                path.close()
+                canvas.drawPath(path, paint)
+                canvas.drawPath(path, outlinePaint)
+            } else {
+                path.moveTo(x, y - size)
+                path.lineTo(x + size * 0.7f, y + size * 0.7f)
+                path.lineTo(x, y + size * 0.3f)
+                path.lineTo(x - size * 0.7f, y + size * 0.7f)
+                path.close()
+                canvas.save()
+                canvas.rotate((ac.trueTrackDeg ?: 0.0).toFloat(), x, y)
+                canvas.drawPath(path, paint)
+                canvas.drawPath(path, outlinePaint)
+                canvas.restore()
+            }
 
             val label = ac.callsign ?: ac.icao24.uppercase()
             if (showLabels) {

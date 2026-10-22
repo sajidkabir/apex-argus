@@ -34,7 +34,15 @@ fun AppNav(vm: MainViewModel = viewModel()) {
             )
         }
         composable("radar") {
-            RadarScreen(onBack = { navController.popBackStack() })
+            RadarScreen(
+                onBack = { navController.popBackStack() },
+                onDecodeMetar = { icao ->
+                    vm.icaoInput = icao
+                    vm.liveKind = com.apexpredator.argus.data.ReportKind.METAR
+                    vm.fetchLive()
+                    navController.popBackStack("home", inclusive = false)
+                }
+            )
         }
         composable("result") {
             val current = vm.result
