@@ -4,6 +4,38 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] - 2026-10-22
+
+The fused-picture release: Apex Argus grows from a weather decoder with
+a radar screen into an open-source flight-intelligence app.
+
+### Added
+
+- Unified search across airports, live flights and satellites. Airports
+  are searchable by name, city, IATA or ICAO in plain English; about
+  9,900 airports with runways are bundled in the app (OurAirports,
+  public domain), so airport search works offline.
+- Satellite layer: stations, bright, weather, GPS and science satellites
+  from CelesTrak, propagated on-device with SGP4 (predict4java) and
+  refreshed every 10 seconds with no network after the daily TLE fetch.
+- Drone / UAV layer: OpenSky extended state vectors expose the ADS-B
+  emitter category, so UAVs render as orange diamonds, rotorcraft in
+  teal, and a "Drones / UAV only" filter isolates them.
+- Weather radar overlay from RainViewer.
+- Aircraft enrichment: photo (Planespotters), type, registration and
+  owner (adsbdb), plus the flight's airline and route with origin and
+  destination airports drawn on the map and tappable (entity linking).
+- Airport detail sheet: runways, elevation, live METAR and TAF, traffic
+  within 100 km, and a one-tap jump into the weather decoder.
+- Emergency squawk watch: 7500 / 7600 / 7700 raises a banner.
+- Watchlist for aircraft and airports (persisted on-device), watched
+  aircraft ringed in gold on the map.
+- Playback: radar frames are recorded while the app runs and can be
+  scrubbed in a playback bar.
+- Measure tool: two taps give distance (nm or km) and bearing.
+- Filters: hide ground traffic, altitude bands; settings for refresh
+  cadence (1, 3 or 5 minutes) and aviation or metric units.
+
 ## [1.1.1] - 2026-10-06
 
 ### Added

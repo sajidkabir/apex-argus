@@ -1,255 +1,109 @@
-# metar-decoder
+# Apex Argus
 
-[![CI](https://github.com/sajidkabir/metar-decoder/actions/workflows/ci.yml/badge.svg)](https://github.com/sajidkabir/metar-decoder/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23077752.svg)](https://doi.org/10.5281/zenodo.23077752)
+**The open-source flight intelligence app for Android.** Live aircraft, drones,
+satellites and weather on one fused map, plus a full METAR/TAF weather decoder.
+No account, no ads, no tracking, no API keys. Built by an aeronautical
+engineer, free forever.
 
-A METAR decoder written in pure Python. It takes a raw aviation weather
-report, the kind pilots and dispatchers read before every flight, and turns
-it into structured data and a plain-English summary. No dependencies, no
-network calls: just the standard library and the WMO code tables.
+## 📲 Download and install (30 seconds, phone only)
 
-```text
-VGHS 011200Z 18008KT 4000 HZ SCT018 BKN100 31/27 Q1006 NOSIG
-```
+**[⬇️ Download Apex Argus APK](https://github.com/sajidkabir/apex-argus/releases/latest/download/apex-argus.apk)**
 
-becomes
+Then:
 
-```text
-METAR for VGHS, observed on day 01 at 12:00 UTC
-Wind: from 180 degrees at 8 knots
-Visibility: 4,000 m
-Conditions: haze
-Clouds: scattered at 1,800 ft; broken at 10,000 ft
-Temperature: 31 C, dewpoint: 27 C
-Pressure: QNH 1006 hPa
-Trend: NOSIG (no significant change expected)
-```
+1. Tap the download above. Your browser downloads `apex-argus.apk`.
+2. Open the downloaded file (from the notification or your Downloads folder).
+3. If Android asks, allow **Install unknown apps** for your browser, just once.
+   This is normal for any app installed outside the Play Store.
+4. Tap **Install**, then **Open**. Done.
 
-## Features
+**Auto-updates are built in.** The app checks for a new version every time it
+opens and offers the update in one tap. You never need to re-download the APK
+manually.
 
-- **Full core report**: station identifier, observation time, AUTO flag,
-  and every standard group of a METAR or SPECI report.
-- **Wind**: direction, speed, and gusts in knots, m/s, or km/h, including
-  VRB variable wind and the variable direction range (for example
-  `240V300`).
-- **Visibility**: meters, or statute miles converted to meters (including
-  fractions like `1 1/2SM`), plus CAVOK handling.
-- **Runway visual range**: runway, value, and tendency, with feet
-  converted to meters.
-- **Weather phenomena**: intensity, descriptors, and phenomena decoded
-  from the code tables, so `+TSRA` reads as "heavy thunderstorm with
-  rain" and `FZRA` as "freezing rain".
-- **Clouds**: layer amount, height in feet, and CB/TCU type, including
-  vertical visibility for an obscured sky.
-- **Temperature and pressure**: negative temperatures (`M01` is minus 1),
-  QNH in hPa, and US altimeter settings in inHg converted to hPa.
-- **Trend and remarks**: NOSIG, TEMPO, and BECMG markers flagged, and the
-  remarks section preserved raw.
-- **Two outputs**: a structured `MetarReport` dataclass (JSON ready) and
-  a plain-English summary. Groups the parser cannot decode are kept in an
-  `unparsed` list, never silently dropped.
+Prefer the release page? Every version is on the
+[Releases page](https://github.com/sajidkabir/apex-argus/releases), and the
+same app is in closed testing on the Play Store (production listing in
+progress).
 
-## Installation
+## What it does
 
-Requires Python 3.10 or newer. No third-party dependencies.
+**Fused live radar (the Palantir-style picture)**
 
-```bash
-git clone https://github.com/sajidkabir/metar-decoder.git
-cd metar-decoder
-pip install -e .
-```
+- Live aircraft worldwide from the OpenSky Network, refreshed on your chosen
+  cadence, with heading-rotated markers and callsign labels
+- **Drone / UAV layer**: aircraft broadcasting the ADS-B drone category are
+  drawn as orange diamonds, with a one-tap "Drones only" filter and a live
+  UAV count
+- **Satellite layer**: space stations, bright satellites, weather and GPS
+  satellites propagated on your phone from CelesTrak orbital elements
+  (SGP4), moving in real time, no network needed after the daily download
+- **Weather radar layer**: live precipitation overlay from RainViewer, the
+  same kind of layer paid trackers charge for
+- **Emergency watch**: any aircraft squawking 7500, 7600 or 7700 raises a
+  red banner the moment it appears
+- **Playback**: the radar records traffic frames while you use it; scrub
+  back through them like the playback mode in paid apps
+- **Measure tool**: tap two points, get distance and bearing
 
-For development (adds the test runner):
+**Search everything from one box**
 
-```bash
-pip install -e . pytest
-pytest -q
-```
+- Airports by **name, city, IATA or ICAO** in plain English: try "Dhaka",
+  "Shahjalal", "DAC" or "VGHS". About 9,900 airports are bundled in the app,
+  so search works offline
+- Live flights by callsign or hex code, satellites by name or NORAD ID
 
-## Quickstart
+**Tap anything for the full picture**
 
-### Command line
+- Aircraft: photo, type, registration, owner, plus the flight's **airline
+  and route with origin and destination airports drawn on the map**. Tap
+  through to either airport (the entity-linking trick intelligence
+  platforms are built on)
+- Airports: runways, elevation, latest METAR and TAF, live traffic within
+  100 km, and one tap to decode the weather in full
+- Satellites: altitude, velocity, position, computed on-device
+- **Watchlist**: star aircraft and airports; watched aircraft get a gold
+  ring on the map
 
-Decode a report into plain English:
+**Aviation weather decoder (the original Argus)**
 
-```bash
-metar decode "VGHS 011200Z 18008KT 4000 HZ SCT018 BKN100 31/27 Q1006 NOSIG"
-```
+- Full METAR and TAF decoding into structured data and plain English,
+  fetched live from aviationweather.gov for any station in the world
+- Flight category (VFR, MVFR, IFR, LIFR), history, and a paste-your-own
+  report mode
 
-```text
-METAR for VGHS, observed on day 01 at 12:00 UTC
-Wind: from 180 degrees at 8 knots
-Visibility: 4,000 m
-Conditions: haze
-Clouds: scattered at 1,800 ft; broken at 10,000 ft
-Temperature: 31 C, dewpoint: 27 C
-Pressure: QNH 1006 hPa
-Trend: NOSIG (no significant change expected)
-```
+## Privacy
 
-A US report with gusts and an inches altimeter setting:
+Argus has no account system, no analytics and no ads. It only talks to
+public data services (OpenSky Network, aviationweather.gov, CelesTrak,
+RainViewer, adsbdb, Planespotters, OpenStreetMap) to fetch the data you
+are looking at. The watchlist and settings live on your phone only.
 
-```bash
-metar decode "KJFK 011751Z 31012G24KT 10SM FEW045 SCT250 24/13 A2992 RMK AO2"
-```
+## Data sources and credit
 
-```text
-METAR for KJFK, observed on day 01 at 17:51 UTC
-Wind: from 310 degrees at 12 knots, gusting to 24 knots
-Visibility: 10 km or more
-Clouds: few at 4,500 ft; scattered at 25,000 ft
-Temperature: 24 C, dewpoint: 13 C
-Pressure: 29.92 inHg (QNH 1013.2 hPa)
-Remarks: AO2
-```
+Flight positions: [OpenSky Network](https://opensky-network.org) ·
+Weather: [aviationweather.gov](https://aviationweather.gov) ·
+Satellites: [CelesTrak](https://celestrak.org) ·
+Precipitation: [RainViewer](https://www.rainviewer.com) ·
+Aircraft and route data: [adsbdb](https://www.adsbdb.com) ·
+Photos: [Planespotters](https://www.planespotters.net) (© their photographers) ·
+Airports: [OurAirports](https://ourairports.com) (public domain) ·
+Maps: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors
 
-Or get the structured report as JSON:
+## For developers
 
-```bash
-metar parse "VGHS 011200Z 18008KT 4000 HZ SCT018 BKN100 31/27 Q1006 NOSIG"
-```
-
-### Python API
-
-```python
-from metar_decoder import human_readable, parse_metar
-
-report = parse_metar(
-    "VHHH 011230Z 24015G30KT 2500 +TSRA SCT015CB BKN040 26/24 Q1002 TEMPO"
-)
-
-report.wind.speed              # 15.0
-report.wind.gust               # 30.0
-report.weather[0].description  # "heavy thunderstorm with rain"
-report.clouds[0].cloud_type    # "CB"
-report.clouds[0].height_ft     # 1500
-report.qnh_hpa                 # 1002.0
-report.trend                   # "TEMPO"
-
-print(human_readable(report))
-```
-
-## How it works
-
-| Module | Responsibility |
-| --- | --- |
-| `parser.py` | Token-based parser and the report dataclasses |
-| `codes.py` | Weather and cloud code tables, weather group splitter |
-| `report.py` | Plain-English rendering of a decoded report |
-| `cli.py` | Command-line interface (`decode`, `parse`) |
-
-The parser walks the report group by group in the order the METAR format
-defines them. Each group is matched against the pattern it is expected to
-follow, decoded, and stored in a typed field. A few conventions worth
-knowing:
-
-- Statute miles convert at 1 SM = 1609.344 m, inches of mercury at
-  1 inHg = 33.8639 hPa.
-- Cloud heights are reported in hundreds of feet: `SCT018` is a scattered
-  layer at 1,800 ft.
-- A leading M in a temperature means below zero: `M01/M01` is minus 1 C
-  with a dewpoint of minus 1 C.
-- CAVOK replaces the visibility, weather, and cloud groups entirely: it
-  means visibility of 10 km or more and no significant cloud or weather.
-
-## Validation and sanity checks
-
-The test suite (26 tests) checks the decoding, field by field, against
-eight real-world style reports from Dhaka, New York, Hong Kong, London,
-Amsterdam, Munich, and Dubai:
-
-- Every field of the Dhaka report: wind, visibility, haze, both cloud
-  layers, temperature and dewpoint, QNH, and the NOSIG trend.
-- Gusts parsed separately from the sustained wind speed.
-- Statute-mile visibility converted to meters, whole and fractional.
-- An inHg altimeter setting kept in inches and also converted to hPa.
-- Heavy thunderstorm with rain decoded from intensity, descriptor, and
-  phenomenon, with the cumulonimbus layer flagged.
-- Fog with an obscured sky: vertical visibility instead of a cloud layer.
-- Negative temperatures from M-prefixed fields.
-- CAVOK expanded to 10 km or more with no cloud and no weather groups.
-- VRB wind with no direction, and a variable direction range attached to
-  the wind group.
-- The plain-English output contains the phrases a reader would look for,
-  and the CLI emits valid JSON with the expected values.
-
-## Honest limitations
-
-- METAR and SPECI only. TAF forecasts are a different format and are not
-  decoded yet.
-- Trend groups are flagged (NOSIG, TEMPO, BECMG) but the forecast groups
-  that can follow a TEMPO or BECMG marker are not decoded.
-- Remarks are preserved raw. Coded remarks such as sea-level pressure or
-  hourly temperature groups are not expanded.
-- Runway visual range values with P (more than) or M (less than)
-  prefixes are stored at their numeric value; the qualifier is kept only
-  in the raw group text.
-- Wind shear groups and runway state groups are not modeled; they land
-  in the report's `unparsed` list.
-- There is no station database: the station is reported by its ICAO code,
-  not expanded to a station name.
-
-These are deliberate. Each one is a clean extension point, listed below.
-
-## Roadmap and room for exploration
-
-Ideas are welcome. Roughly in order of expected value:
-
-- **TAF decoding**: the forecast format shares most groups with METAR, so
-  the parser core can grow a second entry point, including FM, BECMG,
-  TEMPO, and probability groups decoded in full.
-- **Flight category classification**: derive VFR, MVFR, IFR, and LIFR
-  categories from visibility and ceiling, the way briefing tools do.
-- **Remarks decoding**: expand the common coded remarks (automated
-  station type, sea-level pressure, precise temperature groups).
-- **Trend group decoding**: full decoding of the forecast groups that
-  follow TEMPO and BECMG markers.
-- **Station metadata**: an optional lookup from ICAO code to station
-  name, city, and country, kept as data rather than code.
-- **Wind shear and runway state groups**: model the remaining standard
-  groups so `unparsed` comes back empty for well-formed reports.
-- **Batch and file input**: decode a file of reports, one per line, for
-  log analysis and climatology studies.
-
-If you build one of these, open an issue or a pull request. Include the
-raw report string that motivated the change: with METAR, the string is
-the test case.
-
-## Project structure
+Native Kotlin + Jetpack Compose. The Android project is in `android/`:
 
 ```text
-src/metar_decoder/   the package (parser, codes, report, cli)
-tests/               pytest suite, field-level checks per report
-examples/            runnable script decoding five sample reports
-.github/workflows/   CI: install and run the test suite on every push
+git clone https://github.com/sajidkabir/apex-argus.git
 ```
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). The short version: fork, branch,
-test, pull request. Every change should keep `pytest -q` green and should
-not change a decoded value without explaining why in the PR.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md).
-
-## Citation
-
-If you use this project in research, please cite the archived release:
-
-Sajid Kabir Saji (2026). metar-decoder (v1.0.1) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23077753
-
-The concept DOI https://doi.org/10.5281/zenodo.23077752 always resolves to the latest version.
+Open `android/` in Android Studio and run the `github` flavor for the
+public build, or the `play` flavor for the Play Store build (identical
+except the Play build links to the store for updates, per Play policy).
+Unit tests: `gradle :app:testGithubDebugUnitTest`. Releases are built
+and signed by GitHub Actions from version tags.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
-## Author
-
-Sajid Kabir Saji, aeronautical engineer. Research interests: onboard
-autonomous decision-making for UAVs and solar-electric flight endurance.
-More at [sajidkabir.com](https://sajidkabir.com).
