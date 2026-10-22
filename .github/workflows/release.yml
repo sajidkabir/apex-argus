@@ -63,6 +63,7 @@ jobs:
           APK_SRC="android/app/build/outputs/apk/github/release/app-github-release.apk"
           APK_NAME="apex-argus-${TAG}.apk"
           cp "$APK_SRC" "$APK_NAME"
+          cp "$APK_SRC" "apex-argus.apk"
           VCODE=$(grep -E '^\s*versionCode = ' android/app/build.gradle.kts | head -1 | grep -oE '[0-9]+')
           VNAME="${TAG#v}"
           printf '{"versionCode":%s,"versionName":"%s","apkUrl":"https://github.com/sajidkabir/apex-argus/releases/download/%s/%s"}' \
@@ -76,6 +77,7 @@ jobs:
         with:
           files: |
             apex-argus-*.apk
+            apex-argus.apk
             version.json
           generate_release_notes: true
 ---
