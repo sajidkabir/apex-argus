@@ -12,7 +12,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Required by the OSM tile usage policy: a valid user agent.
-        Configuration.getInstance().userAgentValue = "ApexArgus/1.1.0"
+        Configuration.getInstance().userAgentValue = "ApexArgus/2.0"
         enableEdgeToEdge()
         setContent {
             ApexArgusTheme {
