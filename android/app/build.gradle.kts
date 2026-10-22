@@ -12,8 +12,8 @@ android {
         applicationId = "com.apexpredator.argus"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "2.0.0"
+        versionCode = 7
+        versionName = "2.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -96,6 +96,10 @@ dependencies {
     implementation("com.github.davidmoten:predict4java:1.3.1")
     // Aircraft photos in the detail sheet.
     implementation("io.coil-kt:coil-compose:2.7.0")
+    // CameraX for the Spotter tab (point at the sky, name the aircraft).
+    implementation("androidx.camera:camera-camera2:1.3.4")
+    implementation("androidx.camera:camera-lifecycle:1.3.4")
+    implementation("androidx.camera:camera-view:1.3.4")
 
     testImplementation("junit:junit:4.13.2")
 
