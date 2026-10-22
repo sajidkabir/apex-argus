@@ -408,11 +408,11 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
 
     fun isWatched(ap: Airport): Boolean = ap.ident in watchedAirports
 
-    fun setRefreshSeconds(seconds: Int) {
+    fun updateRefreshSeconds(seconds: Int) {
         viewModelScope.launch { prefs.setRefreshSeconds(seconds) }
     }
 
-    fun setMetricUnits(metric: Boolean) {
+    fun updateMetricUnits(metric: Boolean) {
         viewModelScope.launch { prefs.setMetricUnits(metric) }
     }
 
