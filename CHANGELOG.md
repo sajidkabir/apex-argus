@@ -4,6 +4,33 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] - 2026-10-22
+
+The super-app release: Argus grows a five-tab menu and a set of
+personal, location-aware tools around the radar.
+
+### Added
+
+- Five-tab menu: Radar, Spotter, Sky, Airports, Tools.
+- Spotter: point the phone camera at an aircraft in the sky and Argus
+  names it, using GPS plus the compass/tilt sensors against live
+  traffic; the best match in view opens the full detail sheet.
+- Near Me: every aircraft within 80 km of the user, nearest first,
+  with distance, bearing, height above the horizon, and movement
+  verdicts ("On approach to VGHS", "Departed VGHS, climbing").
+- Sky tab: satellites overhead now, plus predicted passes over the
+  user's location for the next 24 hours (rise time, peak elevation,
+  direction, duration) from the same on-device SGP4 engine.
+- Airports tab: plain-English search over the bundled airport set,
+  watched airports, nearest airports, a public-webcams shortcut per
+  airport, and a movements board (arrivals/departures from live
+  position trends) in each airport's sheet.
+- Live Cams tab: a world map of public webcams (Windy) to pan and
+  zoom globally and watch in place, plus a curated aviation cams list.
+- Map identity glyphs: aeroplanes, drones (diamond), helicopters
+  (circled H), satellites (star) and unknown traffic (hollow marker)
+  each read differently at a glance, with a legend in the panel.
+
 ## [2.0.0] - 2026-10-22
 
 The fused-picture release: Apex Argus grows from a weather decoder with

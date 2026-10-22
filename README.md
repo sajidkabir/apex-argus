@@ -28,6 +28,34 @@ progress).
 
 ## What it does
 
+**Five tabs: Radar · Spotter · Sky · Airports · Tools**
+
+**Spotter (the balcony feature)**
+
+- Point your phone camera at an aircraft in the sky and Argus names it:
+  GPS position plus compass and tilt sensors matched against live
+  traffic, with the flight's photo, airline and route one tap away
+- Near Me: everything within 80 km of you, nearest first, with plain
+  verdicts like "On approach to VGHS" or "Departed VGHS, climbing"
+
+**Sky**
+
+- Satellites overhead right now, and every worthwhile pass over your
+  location in the next 24 hours: rise time, peak elevation, direction
+  and duration, predicted on the phone itself
+
+**Airports**
+
+- Search 9,900 airports by name, city, IATA or ICAO (works offline)
+- Watched airports, nearest airports, a movements board (arrivals and
+  departures from live position trends), runways, weather and a
+  public-webcams shortcut for every field
+
+**Live cams**
+
+- A world map of public webcams: pan and zoom anywhere on Earth, tap
+  a camera, watch its live feed, plus a curated aviation cams list
+
 **Fused live radar (the Palantir-style picture)**
 
 - Live aircraft worldwide from the OpenSky Network, refreshed on your chosen
