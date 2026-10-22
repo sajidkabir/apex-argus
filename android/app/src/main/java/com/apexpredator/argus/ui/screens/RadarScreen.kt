@@ -80,7 +80,7 @@ import kotlin.math.roundToInt
 @Composable
 fun RadarScreen(
     vm: RadarViewModel = viewModel(),
-    onBack: () -> Unit,
+    onBack: (() -> Unit)? = null,
     onDecodeMetar: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -270,11 +270,13 @@ fun RadarScreen(
             TopAppBar(
                 title = { Text("Argus Radar") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -555,6 +557,13 @@ private fun ControlPanel(vm: RadarViewModel) {
             LayerSwitch("Satellites", vm.showSatellites) { vm.showSatellites = it }
             LayerSwitch("Airports", vm.showAirports) { vm.showAirports = it }
             LayerSwitch("Weather radar", vm.showWeather) { vm.showWeather = it }
+            Text("Legend", style = MaterialTheme.typography.titleMedium)
+            LegendRow("▲", "Aeroplane (bigger = heavy, smaller = light)")
+            LegendRow("◆", "Drone / UAV")
+            LegendRow("H", "Helicopter (circled H on the map)")
+            LegendRow("△", "Unknown type")
+            LegendRow("✦", "Satellite")
+            LegendRow("■", "Airport")
             Text("Filters", style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
@@ -602,6 +611,22 @@ private fun ControlPanel(vm: RadarViewModel) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun LegendRow(symbol: String, label: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            symbol,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(end = 12.dp)
+        )
+        Text(label, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

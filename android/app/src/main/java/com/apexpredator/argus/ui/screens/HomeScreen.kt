@@ -41,7 +41,16 @@ import com.apexpredator.argus.ui.theme.ApexTextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(vm: MainViewModel, onOpenHistory: () -> Unit, onOpenRadar: () -> Unit) {
+fun HomeScreen(
+    vm: MainViewModel,
+    onOpenHistory: () -> Unit,
+    onOpenRadar: () -> Unit,
+    onOpenSpotter: () -> Unit = {},
+    onOpenNearMe: () -> Unit = {},
+    onOpenSky: () -> Unit = {},
+    onOpenAirports: () -> Unit = {},
+    onOpenCams: () -> Unit = {},
+) {
     LaunchedEffect(Unit) { vm.checkForUpdates() }
     Scaffold(
         topBar = {
@@ -169,15 +178,31 @@ fun HomeScreen(vm: MainViewModel, onOpenHistory: () -> Unit, onOpenRadar: () -> 
                 )
             }
 
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             ) {
-                OutlinedButton(onClick = onOpenRadar) {
-                    Text("Live radar")
-                }
-                OutlinedButton(onClick = onOpenHistory) {
-                    Text("History")
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "Live tools",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onOpenRadar) { Text("Radar") }
+                        OutlinedButton(onClick = onOpenSpotter) { Text("Spotter") }
+                        OutlinedButton(onClick = onOpenNearMe) { Text("Near me") }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onOpenSky) { Text("Sky") }
+                        OutlinedButton(onClick = onOpenAirports) { Text("Airports") }
+                        OutlinedButton(onClick = onOpenCams) { Text("Live cams") }
+                    }
+                    OutlinedButton(onClick = onOpenHistory) { Text("Decode history") }
                 }
             }
         }

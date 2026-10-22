@@ -203,6 +203,29 @@ fun AirportSheet(
             Text(taf, style = MaterialTheme.typography.bodySmall)
         }
 
+        if (vm.airportArrivals.isNotEmpty() || vm.airportDepartures.isNotEmpty()) {
+            Text("Movements board", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "From live position trends; fills in as the radar refreshes.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
+            for ((traffic, distKm) in vm.airportArrivals) {
+                DetailRow(
+                    "▼ ARR ${traffic.callsign ?: traffic.icao24.uppercase()}",
+                    "${distKm.roundToInt()} km · " +
+                        (traffic.altitudeFt?.let { "${it.roundToInt()} ft" } ?: "")
+                )
+            }
+            for ((traffic, distKm) in vm.airportDepartures) {
+                DetailRow(
+                    "▲ DEP ${traffic.callsign ?: traffic.icao24.uppercase()}",
+                    "${distKm.roundToInt()} km · " +
+                        (traffic.altitudeFt?.let { "${it.roundToInt()} ft" } ?: "")
+                )
+            }
+        }
+
         if (vm.airportTraffic.isNotEmpty()) {
             Text(
                 "Traffic within 100 km",
