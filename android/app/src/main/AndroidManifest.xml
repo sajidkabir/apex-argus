@@ -5,6 +5,15 @@
          live flight positions, and map tiles. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Spotter, Near Me, Sky and Airports tabs: the camera identifies
+         aircraft in the sky; location anchors "near me" features.
+         Both are requested at runtime and everything degrades
+         gracefully without them. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
 
     <application
         android:allowBackup="true"
