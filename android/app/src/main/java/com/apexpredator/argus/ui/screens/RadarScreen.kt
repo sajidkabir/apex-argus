@@ -16,10 +16,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -220,7 +220,7 @@ fun RadarScreen(
     LaunchedEffect(vm.showWeather, vm.weatherPath) {
         weatherOverlay?.let {
             mapView.overlays.remove(it)
-            it.onDetach()
+            it.onDetach(mapView)
         }
         weatherOverlay = null
         val path = vm.weatherPath
@@ -291,7 +291,7 @@ fun RadarScreen(
                         }
                     }
                     IconButton(onClick = { panelOpen = !panelOpen }) {
-                        Icon(Icons.Filled.Layers, contentDescription = "Layers and filters")
+                        Icon(Icons.Filled.Settings, contentDescription = "Layers and filters")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -385,7 +385,7 @@ fun RadarScreen(
                         }
                     ) {
                         Icon(
-                            Icons.Filled.Straighten,
+                            Icons.Filled.Place,
                             contentDescription = "Measure distance"
                         )
                     }
@@ -394,7 +394,7 @@ fun RadarScreen(
                             if (vm.inPlayback) vm.exitPlayback() else vm.enterPlayback()
                         }
                     ) {
-                        Icon(Icons.Filled.History, contentDescription = "Playback")
+                        Icon(Icons.Filled.PlayArrow, contentDescription = "Playback")
                     }
                 }
                 if (measureOn) {
