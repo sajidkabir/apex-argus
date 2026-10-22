@@ -56,8 +56,22 @@ class SatelliteOverlay(
             val x = tmp.x.toFloat()
             val y = tmp.y.toFloat()
             screenPos[sat.noradId] = Point(tmp.x, tmp.y)
-            canvas.drawCircle(x, y, r, dotPaint)
-            canvas.drawCircle(x, y, r, ringPaint)
+            // Four-point star: satellites read as their own class of
+            // object, never confused with aircraft markers.
+            val outer = r * 1.9f
+            val inner = r * 0.6f
+            val star = android.graphics.Path()
+            star.moveTo(x, y - outer)
+            star.lineTo(x + inner, y - inner)
+            star.lineTo(x + outer, y)
+            star.lineTo(x + inner, y + inner)
+            star.lineTo(x, y + outer)
+            star.lineTo(x - inner, y + inner)
+            star.lineTo(x - outer, y)
+            star.lineTo(x - inner, y - inner)
+            star.close()
+            canvas.drawPath(star, dotPaint)
+            canvas.drawPath(star, ringPaint)
             if (showLabels) {
                 canvas.drawText(sat.name, x + r + 4f * density, y + 4f * density, labelPaint)
             }

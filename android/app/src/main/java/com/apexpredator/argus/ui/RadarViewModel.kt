@@ -82,6 +82,14 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
     // Airport detail extras: live traffic nearby + raw weather reports.
     var airportTraffic by mutableStateOf<List<Pair<AircraftState, Double>>>(emptyList())
         private set
+    // Movements board: arrivals are closing on the airport and
+    // descending, departures are opening and climbing. Trends need two
+    // radar refreshes, so the board fills in as the feed runs.
+    var airportArrivals by mutableStateOf<List<Pair<AircraftState, Double>>>(emptyList())
+        private set
+    var airportDepartures by mutableStateOf<List<Pair<AircraftState, Double>>>(emptyList())
+        private set
+    private var prevPositions: Map<String, Pair<Double, Double>> = emptyMap()
     var airportMetar by mutableStateOf<String?>(null)
         private set
     var airportTaf by mutableStateOf<String?>(null)
@@ -283,6 +291,9 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
             errorMessage = null
             try {
                 val fresh = opensky.fetchStates(bbox)
+                prevPositions = liveAircraft.associate {
+                    it.icao24 to (it.latitude to it.longitude)
+                }
                 liveAircraft = fresh
                 viewModelScope.launch { playbackStore.record(fresh) }
                 selected?.let { sel ->
@@ -391,6 +402,22 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
             .filter { it.second <= AIRPORT_TRAFFIC_RADIUS_KM }
             .sortedBy { it.second }
             .take(10)
+
+        val arrivals = ArrayList<Pair<AircraftState, Double>>()
+        val departures = ArrayList<Pair<AircraftState, Double>>()
+        for ((ac, distNow) in airportTraffic) {
+            if (ac.onGround) continue
+            val prev = prevPositions[ac.icao24] ?: continue
+            val distPrev = GeoMath.haversineKm(ap.lat, ap.lon, prev.first, prev.second)
+            val trend = distNow - distPrev
+            val vr = ac.verticalRateMs ?: 0.0
+            when {
+                trend < -0.5 && vr < 0.5 -> arrivals.add(ac to distNow)
+                trend > 0.5 && vr > -0.5 -> departures.add(ac to distNow)
+            }
+        }
+        airportArrivals = arrivals.sortedBy { it.second }.take(6)
+        airportDepartures = departures.sortedBy { it.second }.take(6)
     }
 
     // ---- Watchlist and settings ----

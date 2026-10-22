@@ -43,6 +43,17 @@ class AircraftOverlay(
         style = Paint.Style.FILL
         color = Color.parseColor("#757575")
     }
+    private val unknownPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+        color = Color.parseColor("#9AA3B2")
+    }
+    private val hPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#0D1117")
+        textSize = 30f
+        textAlign = Paint.Align.CENTER
+        isFakeBoldText = true
+    }
     private val outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeWidth = 2f
@@ -100,21 +111,46 @@ class AircraftOverlay(
                 ac.isRotorcraft -> rotorPaint
                 else -> planePaint
             }
+            // Identity at a glance: every class of traffic has its
+            // own glyph, so the map reads without tapping anything.
+            // Diamond = drone, circled H = helicopter, hollow triangle
+            // = unknown type, solid triangle = aeroplane (bigger for
+            // heavies, smaller for lights).
+            val glyphSize = size * when (ac.category) {
+                6 -> 1.3f   // heavy
+                2 -> 0.8f   // light
+                else -> 1.0f
+            }
             val path = Path()
             if (ac.isUav) {
                 // Diamond for drones, so they read differently at a glance.
-                path.moveTo(x, y - size)
-                path.lineTo(x + size, y)
-                path.lineTo(x, y + size)
-                path.lineTo(x - size, y)
+                path.moveTo(x, y - glyphSize)
+                path.lineTo(x + glyphSize, y)
+                path.lineTo(x, y + glyphSize)
+                path.lineTo(x - glyphSize, y)
                 path.close()
                 canvas.drawPath(path, paint)
                 canvas.drawPath(path, outlinePaint)
+            } else if (ac.isRotorcraft) {
+                canvas.drawCircle(x, y, glyphSize * 0.95f, rotorPaint)
+                canvas.drawCircle(x, y, glyphSize * 0.95f, outlinePaint)
+                hPaint.textSize = glyphSize * 1.1f
+                canvas.drawText("H", x, y + glyphSize * 0.38f, hPaint)
+            } else if (!ac.onGround && (ac.category == null || ac.category == 0 || ac.category == 1)) {
+                path.moveTo(x, y - glyphSize)
+                path.lineTo(x + glyphSize * 0.7f, y + glyphSize * 0.7f)
+                path.lineTo(x, y + glyphSize * 0.3f)
+                path.lineTo(x - glyphSize * 0.7f, y + glyphSize * 0.7f)
+                path.close()
+                canvas.save()
+                canvas.rotate((ac.trueTrackDeg ?: 0.0).toFloat(), x, y)
+                canvas.drawPath(path, unknownPaint)
+                canvas.restore()
             } else {
-                path.moveTo(x, y - size)
-                path.lineTo(x + size * 0.7f, y + size * 0.7f)
-                path.lineTo(x, y + size * 0.3f)
-                path.lineTo(x - size * 0.7f, y + size * 0.7f)
+                path.moveTo(x, y - glyphSize)
+                path.lineTo(x + glyphSize * 0.7f, y + glyphSize * 0.7f)
+                path.lineTo(x, y + glyphSize * 0.3f)
+                path.lineTo(x - glyphSize * 0.7f, y + glyphSize * 0.7f)
                 path.close()
                 canvas.save()
                 canvas.rotate((ac.trueTrackDeg ?: 0.0).toFloat(), x, y)
@@ -123,7 +159,13 @@ class AircraftOverlay(
                 canvas.restore()
             }
 
-            val label = ac.callsign ?: ac.icao24.uppercase()
+            val baseLabel = ac.callsign ?: ac.icao24.uppercase()
+            val label = baseLabel + when {
+                ac.isUav -> " · UAV"
+                ac.isRotorcraft -> " · HELI"
+                ac.category == 6 -> " · HVY"
+                else -> ""
+            }
             if (showLabels) {
                 val textWidth = labelPaint.measureText(label)
                 val pad = 6f * density
