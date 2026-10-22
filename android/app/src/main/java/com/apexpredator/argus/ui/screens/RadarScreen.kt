@@ -591,13 +591,13 @@ private fun ControlPanel(vm: RadarViewModel) {
                 for (seconds in listOf(60, 180, 300)) {
                     FilterChip(
                         selected = vm.refreshSeconds == seconds,
-                        onClick = { vm.setRefreshSeconds(seconds) },
+                        onClick = { vm.updateRefreshSeconds(seconds) },
                         label = { Text("${seconds / 60} min") }
                     )
                 }
                 FilterChip(
                     selected = vm.metricUnits,
-                    onClick = { vm.setMetricUnits(!vm.metricUnits) },
+                    onClick = { vm.updateMetricUnits(!vm.metricUnits) },
                     label = { Text(if (vm.metricUnits) "Metric" else "Aviation units") }
                 )
             }
