@@ -12,8 +12,8 @@ android {
         applicationId = "com.apexpredator.argus"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.1.3"
+        versionCode = 6
+        versionName = "2.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -91,6 +91,11 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     // OpenStreetMap rendering for the live flight radar (no API key needed).
     implementation("org.osmdroid:osmdroid-android:6.1.20")
+    // SGP4 satellite propagation for the satellite layer (computes
+    // positions on-device from CelesTrak TLE data).
+    implementation("com.github.davidmoten:predict4java:1.3.1")
+    // Aircraft photos in the detail sheet.
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     testImplementation("junit:junit:4.13.2")
 
