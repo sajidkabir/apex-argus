@@ -2,6 +2,7 @@ package com.apexpredator.argus.data
 
 import android.content.Context
 import com.github.amsacode.predict4java.GroundStationPosition
+import com.github.amsacode.predict4java.PassPredictor
 import com.github.amsacode.predict4java.Satellite
 import com.github.amsacode.predict4java.SatelliteFactory
 import com.github.amsacode.predict4java.TLE
@@ -25,6 +26,21 @@ data class SatellitePosition(
     val velocityKmS: Double?,
 ) {
     val altitudeFt: Double get() = altitudeKm * 3280.84
+}
+
+// One predicted satellite pass over the observer.
+data class SatPass(
+    val name: String,
+    val noradId: Int,
+    val group: String,
+    val startMs: Long,
+    val peakMs: Long,
+    val endMs: Long,
+    val maxElevationDeg: Double,
+    val riseAzimuthDeg: Double,
+    val setAzimuthDeg: Double,
+) {
+    val durationMin: Double get() = (endMs - startMs) / 60_000.0
 }
 
 // CelesTrak groups fetched for the satellite layer. Starlink is left
@@ -125,6 +141,48 @@ class SatelliteRepository(private val context: Context) {
                 it.name.uppercase().contains(q) || it.noradId.toString() == q
             }
             .take(limit)
+    }
+
+    // Upcoming passes over an observer: when each satellite rises,
+    // peaks and sets, computed with predict4java's pass predictor.
+    // Limited to stations and bright satellites, the ones actually
+    // worth stepping onto a balcony for, and to passes peaking at
+    // least 10 degrees up.
+    suspend fun passesOver(
+        lat: Double,
+        lon: Double,
+        hoursAhead: Int = 24,
+    ): List<SatPass> = withContext(Dispatchers.Default) {
+        if (satellites.isEmpty()) return@withContext emptyList()
+        val station = GroundStationPosition(lat, lon, 0.0)
+        val now = Date()
+        val out = ArrayList<SatPass>()
+        for (sat in satellites) {
+            val group = groupByNorad[sat.tle.catnum] ?: continue
+            if (group != "stations" && group != "visual") continue
+            try {
+                val predictor = PassPredictor(sat.tle, station)
+                for (pass in predictor.getPasses(now, hoursAhead, true)) {
+                    if (pass.maxEl < 10.0) continue
+                    out.add(
+                        SatPass(
+                            name = sat.tle.name.trim(),
+                            noradId = sat.tle.catnum,
+                            group = group,
+                            startMs = pass.startTime.time,
+                            peakMs = pass.tca.time,
+                            endMs = pass.endTime.time,
+                            maxElevationDeg = pass.maxEl,
+                            riseAzimuthDeg = pass.aosAzimuth.toDouble(),
+                            setAzimuthDeg = pass.losAzimuth.toDouble(),
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                // One satellite's bad elements must not sink the list.
+            }
+        }
+        out.sortedBy { it.startMs }
     }
 
     companion object {
