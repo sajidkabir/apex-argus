@@ -29,9 +29,12 @@ class OpenSkyRepository {
     suspend fun fetchStates(bbox: BoundingBox): List<AircraftState> =
         withContext(Dispatchers.IO) {
             val b = clampToBudget(bbox)
+            // extended=1 adds the ADS-B emitter category (index 17),
+            // which is how the drone/UAV layer is told apart from
+            // ordinary traffic.
             val query = String.format(
                 Locale.US,
-                "lamin=%.4f&lomin=%.4f&lamax=%.4f&lomax=%.4f",
+                "lamin=%.4f&lomin=%.4f&lamax=%.4f&lomax=%.4f&extended=1",
                 b.lamin, b.lomin, b.lamax, b.lomax
             )
             val connection =
@@ -87,7 +90,7 @@ class OpenSkyRepository {
 
     companion object {
         private const val BASE_URL = "https://opensky-network.org/api/states/all"
-        private const val USER_AGENT = "ApexArgus/1.1.0"
+        private const val USER_AGENT = "ApexArgus/2.0"
         const val MAX_WINDOW_DEG = 5.0
         const val MAX_AREA_SQ_DEG = 25.0
     }

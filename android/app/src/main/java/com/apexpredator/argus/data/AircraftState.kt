@@ -19,15 +19,25 @@ data class AircraftState(
     val trueTrackDeg: Double?,
     val verticalRateMs: Double?,
     val squawk: String?,
+    // ADS-B emitter category, only present in extended state vectors:
+    // 8 rotorcraft, 14 UAV/drone, 6 heavy, 2 light, 9 glider, and so on.
+    val category: Int? = null,
 ) {
     val altitudeFt: Double? get() = baroAltitudeM?.times(M_TO_FT)
     val speedKt: Double? get() = velocityMs?.times(MS_TO_KT)
     val verticalRateFpm: Double? get() = verticalRateMs?.times(MS_TO_FPM)
 
+    val isUav: Boolean get() = category == CAT_UAV
+    val isRotorcraft: Boolean get() = category == CAT_ROTORCRAFT
+    val isEmergency: Boolean get() = squawk in EMERGENCY_SQUAWKS
+
     companion object {
         const val M_TO_FT = 3.28084
         const val MS_TO_KT = 1.94384
         const val MS_TO_FPM = 196.85
+        const val CAT_UAV = 14
+        const val CAT_ROTORCRAFT = 8
+        val EMERGENCY_SQUAWKS = setOf("7500", "7600", "7700")
     }
 }
 
@@ -54,6 +64,7 @@ fun parseAircraftStates(body: String): List<AircraftState> {
                 trueTrackDeg = s.optDoubleOrNull(IDX_TRACK),
                 verticalRateMs = s.optDoubleOrNull(IDX_VERT_RATE),
                 squawk = s.optStringOrNull(IDX_SQUAWK),
+                category = s.optIntOrNull(IDX_CATEGORY),
             )
         )
     }
@@ -62,6 +73,9 @@ fun parseAircraftStates(body: String): List<AircraftState> {
 
 private fun org.json.JSONArray.optDoubleOrNull(index: Int): Double? =
     if (index >= length() || isNull(index)) null else getDouble(index)
+
+private fun org.json.JSONArray.optIntOrNull(index: Int): Int? =
+    if (index >= length() || isNull(index)) null else getInt(index)
 
 private fun org.json.JSONArray.optStringOrNull(index: Int): String? =
     if (index >= length() || isNull(index)) null else getString(index)
@@ -80,3 +94,4 @@ private const val IDX_VELOCITY = 9
 private const val IDX_TRACK = 10
 private const val IDX_VERT_RATE = 11
 private const val IDX_SQUAWK = 14
+private const val IDX_CATEGORY = 17
