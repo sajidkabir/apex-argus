@@ -12,8 +12,8 @@ android {
         applicationId = "com.apexpredator.argus"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "2.1.0"
+        versionCode = 8
+        versionName = "2.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -94,6 +94,8 @@ dependencies {
     // SGP4 satellite propagation for the satellite layer (computes
     // positions on-device from CelesTrak TLE data).
     implementation("com.github.davidmoten:predict4java:1.3.1")
+    // OkHttp for the Nostr WebSocket client behind Argus Chat.
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // Aircraft photos in the detail sheet.
     implementation("io.coil-kt:coil-compose:2.7.0")
     // CameraX for the Spotter tab (point at the sky, name the aircraft).
