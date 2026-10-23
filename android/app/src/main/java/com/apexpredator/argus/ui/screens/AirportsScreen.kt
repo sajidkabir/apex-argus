@@ -35,6 +35,7 @@ import com.apexpredator.argus.data.AirportDb
 import com.apexpredator.argus.data.LocationRepository
 import com.apexpredator.argus.data.webcamsNearUrl
 import com.apexpredator.argus.ui.RadarViewModel
+import com.apexpredator.argus.ui.components.EmptyState
 import com.apexpredator.argus.ui.theme.ApexTextSecondary
 import kotlin.math.roundToInt
 
@@ -102,10 +103,9 @@ fun AirportsScreen(
                 val results = if (dbReady) AirportDb.search(query, 15) else emptyList()
                 if (results.isEmpty()) {
                     item {
-                        Text(
-                            "No airport matches that yet.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = ApexTextSecondary
+                        EmptyState(
+                            title = "No matches",
+                            hint = "Try a different name, city, IATA or ICAO code."
                         )
                     }
                 }
@@ -141,11 +141,10 @@ fun AirportsScreen(
                 }
                 if (watched.isEmpty() && nearest.isEmpty()) {
                     item {
-                        Text(
-                            "Search above, or star airports from the radar " +
-                                "to build your watched list.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = ApexTextSecondary
+                        EmptyState(
+                            title = "Nothing to show yet",
+                            hint = "Search above, or star airports from the radar " +
+                                "to build your watched list."
                         )
                     }
                 }

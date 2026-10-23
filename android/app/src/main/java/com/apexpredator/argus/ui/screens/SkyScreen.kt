@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -25,6 +24,8 @@ import com.apexpredator.argus.data.SatPass
 import com.apexpredator.argus.data.SkyMath
 import com.apexpredator.argus.ui.OverheadSatellite
 import com.apexpredator.argus.ui.SkyViewModel
+import com.apexpredator.argus.ui.components.EmptyState
+import com.apexpredator.argus.ui.components.PulseSkeleton
 import com.apexpredator.argus.ui.theme.ApexTextSecondary
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -70,12 +71,11 @@ fun SkyScreen(vm: SkyViewModel) {
             }
             if (vm.isLoading) {
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    PulseSkeleton(
+                        height = 56.dp,
+                        lines = 3,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
                 }
             }
             item {
@@ -87,10 +87,9 @@ fun SkyScreen(vm: SkyViewModel) {
             }
             if (!vm.isLoading && vm.overhead.isEmpty()) {
                 item {
-                    Text(
-                        "No tracked satellites within 2,000 km right now.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = ApexTextSecondary
+                    EmptyState(
+                        title = "Nothing overhead",
+                        hint = "No tracked satellites within 2,000 km right now."
                     )
                 }
             }
@@ -112,10 +111,9 @@ fun SkyScreen(vm: SkyViewModel) {
             }
             if (!vm.isLoading && vm.passes.isEmpty()) {
                 item {
-                    Text(
-                        "No high passes in the next 24 hours. Check again tomorrow.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = ApexTextSecondary
+                    EmptyState(
+                        title = "No passes coming",
+                        hint = "No high passes in the next 24 hours. Check again tomorrow."
                     )
                 }
             }
