@@ -1,6 +1,8 @@
 package com.apexpredator.argus.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +23,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -49,6 +50,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.AnnotatedString
@@ -87,6 +92,43 @@ private fun formatListTime(tsSeconds: Long): String {
 
 private fun truncateNpub(npub: String): String =
     if (npub.length <= 20) npub else npub.take(12) + "..." + npub.takeLast(6)
+
+// Copy glyph drawn with Canvas: material-icons-core (the only icon
+// dependency) does not include ContentCopy, so the copy button draws
+// its own two-sheet icon.
+@Composable
+private fun CopyIcon() {
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    val paper = MaterialTheme.colorScheme.surface
+    Canvas(modifier = Modifier.size(24.dp)) {
+        val w = size.width
+        val h = size.height
+        val stroke = w * 0.075f
+        val radius = CornerRadius(w * 0.09f, w * 0.09f)
+        // Back sheet, offset down and right.
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(w * 0.36f, h * 0.28f),
+            size = Size(w * 0.48f, h * 0.56f),
+            cornerRadius = radius,
+            style = Stroke(width = stroke)
+        )
+        // Front sheet, offset up and left, filled to cover the overlap.
+        drawRoundRect(
+            color = paper,
+            topLeft = Offset(w * 0.16f, h * 0.16f),
+            size = Size(w * 0.48f, h * 0.56f),
+            cornerRadius = radius
+        )
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(w * 0.16f, h * 0.16f),
+            size = Size(w * 0.48f, h * 0.56f),
+            cornerRadius = radius,
+            style = Stroke(width = stroke)
+        )
+    }
+}
 
 // The Chat tab: Nostr-based direct messaging. Three modes: identity
 // setup (first run), the conversation list with people search, and the
@@ -286,10 +328,7 @@ private fun MainChatView(state: ChatUiState, vm: ChatViewModel, identity: Identi
                     clipboard.setText(AnnotatedString(identity.npub))
                     copied = true
                 }) {
-                    Icon(
-                        Icons.Filled.ContentCopy,
-                        contentDescription = "Copy Argus ID"
-                    )
+                    CopyIcon()
                 }
             }
         }
