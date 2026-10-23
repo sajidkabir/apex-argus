@@ -4,6 +4,27 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] - 2026-10-23
+
+The chat release: Argus grows a sixth tab, and the whole app feels
+smoother while data is on its way.
+
+### Added
+
+- Argus Chat: decentralized messaging over the Nostr protocol, free
+  forever with no server. The identity is a secp256k1 keypair generated
+  and kept in the app's private storage, with a profile (chosen
+  username), a shareable Argus ID (npub), people search by username or
+  exact ID, NIP-04 encrypted direct messages, and conversations stored
+  locally on the device.
+- Smooth tab transitions: destinations slide a quarter width and fade
+  when switching tabs.
+
+### Changed
+
+- Loading skeletons and tidy empty states across the data screens,
+  replacing the old spinner and loose placeholder text.
+
 ## [2.1.0] - 2026-10-22
 
 The super-app release: Argus grows a five-tab menu and a set of

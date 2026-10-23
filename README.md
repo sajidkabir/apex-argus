@@ -28,7 +28,7 @@ progress).
 
 ## What it does
 
-**Five tabs: Radar · Spotter · Sky · Airports · Tools**
+**Six tabs: Radar · Spotter · Sky · Airports · Tools · Chat**
 
 **Spotter (the balcony feature)**
 
@@ -55,6 +55,15 @@ progress).
 
 - A world map of public webcams: pan and zoom anywhere on Earth, tap
   a camera, watch its live feed, plus a curated aviation cams list
+
+**Argus Chat**
+
+- Decentralized chat over the Nostr protocol: no server, no account,
+  free forever. Your identity is a secp256k1 keypair generated and kept
+  in the app's private storage, with a chosen username and a shareable
+  Argus ID (npub)
+- Find people by username or exact Argus ID, then talk in NIP-04
+  encrypted direct messages. Conversations live on your phone only
 
 **Fused live radar (the Palantir-style picture)**
 
