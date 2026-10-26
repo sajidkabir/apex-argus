@@ -83,6 +83,7 @@ fun RadarScreen(
     onBack: (() -> Unit)? = null,
     onDecodeMetar: (String) -> Unit = {},
     onOpenCam: (com.apexpredator.argus.data.PublicCam) -> Unit = {},
+    onOpenMunicipalCam: (com.apexpredator.argus.data.MunicipalCam) -> Unit = {},
 ) {
     val context = LocalContext.current
     var panelOpen by remember { mutableStateOf(false) }
@@ -101,7 +102,11 @@ fun RadarScreen(
     val cameraOverlay = remember {
         com.apexpredator.argus.ui.CameraOverlay(
             visible = { vm.showCameras },
-            onCamTap = { onOpenCam(it) }
+            municipalCams = {
+                com.apexpredator.argus.data.MunicipalCamMesh.cams.value
+            },
+            onCamTap = { onOpenCam(it) },
+            onMunicipalTap = { onOpenMunicipalCam(it) }
         )
     }
     val routeLine = remember {
