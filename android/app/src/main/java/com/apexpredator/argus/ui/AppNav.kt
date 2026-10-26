@@ -28,6 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -121,6 +124,9 @@ fun AppNav(vm: MainViewModel = viewModel()) {
     val radarVm: RadarViewModel = viewModel(viewModelStoreOwner = activity)
     val spotterVm: SpotterViewModel = viewModel(viewModelStoreOwner = activity)
     val skyVm: SkyViewModel = viewModel(viewModelStoreOwner = activity)
+    var camsTarget by remember {
+        mutableStateOf<Pair<Double, Double>?>(null)
+    }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -176,7 +182,10 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                     onOpenNearMe = { navController.navigate("nearme") },
                     onOpenSky = { goTab("sky") },
                     onOpenAirports = { goTab("airports") },
-                    onOpenCams = { navController.navigate("cams") }
+                    onOpenCams = {
+                        camsTarget = null
+                        navController.navigate("cams")
+                    }
                 )
             }
             composable("radar",
@@ -187,6 +196,10 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                 RadarScreen(
                     vm = radarVm,
                     onBack = null,
+                    onOpenCam = { cam ->
+                        val idx = com.apexpredator.argus.data.PUBLIC_CAMS.indexOf(cam)
+                        navController.navigate("cams?cam=$idx")
+                    },
                     onDecodeMetar = { icao ->
                         vm.icaoInput = icao
                         vm.liveKind = com.apexpredator.argus.data.ReportKind.METAR
@@ -229,7 +242,11 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                 popExitTransition = tabPopExit) {
                 AirportsScreen(
                     radarVm = radarVm,
-                    onOpenRadar = { goTab("radar") }
+                    onOpenRadar = { goTab("radar") },
+                    onOpenCams = { ap ->
+                        camsTarget = ap.lat to ap.lon
+                        navController.navigate("cams")
+                    }
                 )
             }
             composable("chat",
@@ -239,12 +256,24 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                 popExitTransition = tabPopExit) {
                 ChatScreen()
             }
-            composable("cams",
+            composable(
+                "cams?cam={camIndex}",
+                arguments = listOf(
+                    androidx.navigation.navArgument("camIndex") {
+                        type = androidx.navigation.NavType.IntType
+                        defaultValue = -1
+                    }
+                ),
                 enterTransition = tabEnter,
                 exitTransition = tabExit,
                 popEnterTransition = tabPopEnter,
-                popExitTransition = tabPopExit) {
-                CamsScreen(onBack = { navController.popBackStack() })
+                popExitTransition = tabPopExit
+            ) { backStackEntry ->
+                CamsScreen(
+                    onBack = { navController.popBackStack() },
+                    initialCenter = camsTarget,
+                    initialCamIndex = backStackEntry.arguments?.getInt("camIndex") ?: -1
+                )
             }
             composable("result",
                 enterTransition = tabEnter,
