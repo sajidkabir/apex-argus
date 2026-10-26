@@ -1,7 +1,5 @@
 package com.apexpredator.argus.ui.screens
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.apexpredator.argus.data.Airport
 import com.apexpredator.argus.data.AirportDb
 import com.apexpredator.argus.data.LocationRepository
-import com.apexpredator.argus.data.webcamsNearUrl
 import com.apexpredator.argus.ui.RadarViewModel
 import com.apexpredator.argus.ui.components.EmptyState
 import com.apexpredator.argus.ui.theme.ApexTextSecondary
@@ -49,6 +46,7 @@ import kotlin.math.roundToInt
 fun AirportsScreen(
     radarVm: RadarViewModel,
     onOpenRadar: () -> Unit,
+    onOpenCams: (Airport) -> Unit = {},
 ) {
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
@@ -110,7 +108,7 @@ fun AirportsScreen(
                     }
                 }
                 items(results) { ap ->
-                    AirportRow(ap, null, { open(ap) })
+                    AirportRow(ap, null, { open(ap) }, onOpenCams)
                 }
             } else {
                 val watched = radarVm.watchedAirports
@@ -124,7 +122,7 @@ fun AirportsScreen(
                         )
                     }
                     items(watched) { ap ->
-                        AirportRow(ap, null, { open(ap) })
+                        AirportRow(ap, null, { open(ap) }, onOpenCams)
                     }
                 }
                 if (nearest.isNotEmpty()) {
@@ -136,7 +134,7 @@ fun AirportsScreen(
                         )
                     }
                     items(nearest) { (ap, distKm) ->
-                        AirportRow(ap, distKm, { open(ap) })
+                        AirportRow(ap, distKm, { open(ap) }, onOpenCams)
                     }
                 }
                 if (watched.isEmpty() && nearest.isEmpty()) {
@@ -158,8 +156,8 @@ private fun AirportRow(
     ap: Airport,
     distanceKm: Double?,
     onOpen: () -> Unit,
+    onOpenCams: (Airport) -> Unit,
 ) {
-    val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -187,15 +185,7 @@ private fun AirportRow(
                     color = ApexTextSecondary
                 )
             }
-            TextButton(
-                onClick = {
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse(webcamsNearUrl(ap))
-                    )
-                    context.startActivity(intent)
-                }
-            ) { Text("Cams") }
+            TextButton(onClick = { onOpenCams(ap) }) { Text("Cams") }
         }
     }
 }
