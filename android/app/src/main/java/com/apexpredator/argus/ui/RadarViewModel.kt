@@ -105,6 +105,7 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
     var showSatellites by mutableStateOf(true)
     var showAirports by mutableStateOf(true)
     var showWeather by mutableStateOf(false)
+    var showCameras by mutableStateOf(true)
     var weatherPath by mutableStateOf<String?>(null)
         private set
     var hideGround by mutableStateOf(false)
