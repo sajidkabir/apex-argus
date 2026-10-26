@@ -200,6 +200,10 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                         val idx = com.apexpredator.argus.data.PUBLIC_CAMS.indexOf(cam)
                         navController.navigate("cams?cam=$idx")
                     },
+                    onOpenMunicipalCam = { cam ->
+                        com.apexpredator.argus.data.MunicipalCamMesh.selected.value = cam
+                        navController.navigate("cams")
+                    },
                     onDecodeMetar = { icao ->
                         vm.icaoInput = icao
                         vm.liveKind = com.apexpredator.argus.data.ReportKind.METAR
