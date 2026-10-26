@@ -56,6 +56,11 @@ progress).
 - A worldwide camera map that is Argus's own: 22 verified free public
   cameras across every continent, no account, no subscription. Tap a
   pin, watch it live in the app
+- The live municipal camera mesh: whole city CCTV networks fetched
+  from the cities themselves, Delaware DOT, Caltrans District 4
+  (Bay Area) and the City of Calgary, with live snapshots and HLS
+  video. Orange pins are city cameras; zoomed out they cluster
+  into count badges
 - The same camera pins live on the main radar map as a layer, so one
   map carries flights, satellites and cameras
 - A full free directory (SkylineWebcams, 2,500+ cameras) and the
