@@ -4,6 +4,40 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.2.2] - 2026-10-26
+
+The godseyeview mesh: the camera map goes from 22 tourist webcams
+to whole city camera networks, live, on the model of Bilawal Sidhu's
+God's Eye View (municipal CCTV fetched from the cities themselves).
+
+### Added
+
+- A live municipal camera mesh: Delaware DOT (364 cameras, live HLS
+  video), Caltrans District 4, Bay Area (live snapshots, many
+  with HLS video), and the City of Calgary's open traffic cameras
+  (live snapshots), fetched at runtime with no key, account or
+  subscription. Orange pins are city traffic cameras; blue pins stay
+  the bundled tourist webcams.
+- Clustering: zoomed out, the mesh collapses into count badges per
+  area; tap a badge to zoom into real pins. The same mesh pins draw
+  on the main radar map, so one map carries flights, satellites,
+  tourist webcams and city CCTV.
+- A native camera sheet: HLS video in-app where the network
+  publishes a stream, otherwise a live snapshot with a refresh
+  button and a 60-second auto-refresh while open. One stream at a
+  time, which keeps Caltrans' fair-use rule intact.
+- City jump chips (Delaware, Bay Area, World) and a mesh status
+  line with per-network counts and a manual refresh.
+
+### Notes
+
+- Feeds are public traffic cameras, credited to their operators
+  (DelDOT, Caltrans, City of Calgary under its Open Government
+  Licence). Argus records nothing.
+- Deliberately excluded: NYC DOT (its feed needs a signed
+  data-sharing agreement) and FL511 (personal use only). London's
+  TfL JamCams need an app key, so London waits for a keyless route.
+
 ## [2.2.1] - 2026-10-26
 
 The godseyeview fix: the camera feature no longer depends on any
