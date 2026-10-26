@@ -12,8 +12,8 @@ android {
         applicationId = "com.apexpredator.argus"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "2.2.1"
+        versionCode = 10
+        versionName = "2.2.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -102,6 +102,10 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.3.4")
     implementation("androidx.camera:camera-lifecycle:1.3.4")
     implementation("androidx.camera:camera-view:1.3.4")
+    // ExoPlayer for the municipal camera mesh: DelDOT and some
+    // Caltrans cameras publish HLS video streams.
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
 
     testImplementation("junit:junit:4.13.2")
 
