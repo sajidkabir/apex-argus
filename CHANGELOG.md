@@ -4,6 +4,32 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] - 2026-10-26
+
+The godseyeview fix: the camera feature no longer depends on any
+third party's map or paywall. Windy is gone from the app entirely.
+
+### Added
+
+- A worldwide camera map that is Argus's own: 22 verified free public
+  cameras across every continent, from Times Square and the Eiffel
+  Tower to Petra, Iceland's glacier lagoon, Ushuaia at the end of the
+  world, a Zambian safari, Cape Town and Hawaii, plus airport spotting
+  cameras at LAX, Heathrow, St Maarten, Dhaka, Frankfurt and Haneda.
+- Cameras on the radar: the same camera pins appear on the main
+  fused map as a layer (on by default, switchable in Layers), so one
+  map carries flights, satellites and cameras. Tapping a pin on the
+  radar opens that camera's live feed.
+- The Airports Cams button now opens the in-app camera map centred
+  on that airport instead of leaving the app.
+
+### Changed
+
+- The Live Cams tab is rebuilt around a native map with tappable
+  pins and an in-app player. The Directory mode is SkylineWebcams'
+  full free directory (2,500+ cameras, no account); every bundled
+  camera page was verified to play without a subscription.
+
 ## [2.2.0] - 2026-10-23
 
 The chat release: Argus grows a sixth tab, and the whole app feels
