@@ -51,10 +51,15 @@ progress).
   departures from live position trends), runways, weather and a
   public-webcams shortcut for every field
 
-**Live cams**
+**Live cams (the godseyeview)**
 
-- A world map of public webcams: pan and zoom anywhere on Earth, tap
-  a camera, watch its live feed, plus a curated aviation cams list
+- A worldwide camera map that is Argus's own: 22 verified free public
+  cameras across every continent, no account, no subscription. Tap a
+  pin, watch it live in the app
+- The same camera pins live on the main radar map as a layer, so one
+  map carries flights, satellites and cameras
+- A full free directory (SkylineWebcams, 2,500+ cameras) and the
+  airport spotting list
 
 **Argus Chat**
 
