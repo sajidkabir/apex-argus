@@ -82,6 +82,7 @@ fun RadarScreen(
     vm: RadarViewModel = viewModel(),
     onBack: (() -> Unit)? = null,
     onDecodeMetar: (String) -> Unit = {},
+    onOpenCam: (com.apexpredator.argus.data.PublicCam) -> Unit = {},
 ) {
     val context = LocalContext.current
     var panelOpen by remember { mutableStateOf(false) }
@@ -96,6 +97,12 @@ fun RadarScreen(
     }
     val satelliteOverlay = remember {
         SatelliteOverlay { vm.selectedSatellite = it }
+    }
+    val cameraOverlay = remember {
+        com.apexpredator.argus.ui.CameraOverlay(
+            visible = { vm.showCameras },
+            onCamTap = { onOpenCam(it) }
+        )
     }
     val routeLine = remember {
         Polyline().apply {
@@ -138,6 +145,7 @@ fun RadarScreen(
             overlays.add(measureLine)
             overlays.add(aircraftOverlay)
             overlays.add(satelliteOverlay)
+            overlays.add(cameraOverlay)
             overlays.add(measureTapOverlay)
         }
     }
@@ -557,6 +565,7 @@ private fun ControlPanel(vm: RadarViewModel) {
             LayerSwitch("Satellites", vm.showSatellites) { vm.showSatellites = it }
             LayerSwitch("Airports", vm.showAirports) { vm.showAirports = it }
             LayerSwitch("Weather radar", vm.showWeather) { vm.showWeather = it }
+            LayerSwitch("Public cameras", vm.showCameras) { vm.showCameras = it }
             Text("Legend", style = MaterialTheme.typography.titleMedium)
             LegendRow("▲", "Aeroplane (bigger = heavy, smaller = light)")
             LegendRow("◆", "Drone / UAV")
