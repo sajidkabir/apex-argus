@@ -94,13 +94,11 @@ object AlertLogic {
             .filter { it.second <= maxKm }
             .minByOrNull { it.second }
 
-    companion object {
-        const val CAT_HEAVY = 6
-        const val FINAL_RADIUS_KM = 60.0
-        const val FINAL_MAX_ALT_FT = 12_000.0
-        const val FINAL_HEADING_DEG = 30.0
-        const val DESCENT_MS = 1.0
-        const val EMERGENCY_RADIUS_KM = 80.0
-        const val PASS_WINDOW_MS = 10L * 60_000
-    }
+    const val CAT_HEAVY = 6
+    const val FINAL_RADIUS_KM = 60.0
+    const val FINAL_MAX_ALT_FT = 12_000.0
+    const val FINAL_HEADING_DEG = 30.0
+    const val DESCENT_MS = 1.0
+    const val EMERGENCY_RADIUS_KM = 80.0
+    const val PASS_WINDOW_MS = 10L * 60_000
 }
