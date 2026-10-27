@@ -103,21 +103,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setAlertSatPass(on: Boolean) {
+    fun updateAlertSatPass(on: Boolean) {
         viewModelScope.launch {
             prefs.setAlertSatPass(on)
             if (on) AlertScheduler.schedule(getApplication())
         }
     }
 
-    fun setAlertHeavy(on: Boolean) {
+    fun updateAlertHeavy(on: Boolean) {
         viewModelScope.launch {
             prefs.setAlertHeavy(on)
             if (on) AlertScheduler.schedule(getApplication())
         }
     }
 
-    fun setAlertEmergency(on: Boolean) {
+    fun updateAlertEmergency(on: Boolean) {
         viewModelScope.launch {
             prefs.setAlertEmergency(on)
             if (on) AlertScheduler.schedule(getApplication())
