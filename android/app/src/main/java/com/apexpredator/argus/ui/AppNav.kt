@@ -49,6 +49,7 @@ import com.apexpredator.argus.ui.screens.AirportsScreen
 import com.apexpredator.argus.ui.screens.CamsScreen
 import com.apexpredator.argus.ui.screens.ChatScreen
 import com.apexpredator.argus.ui.screens.HistoryScreen
+import com.apexpredator.argus.ui.screens.LogbookScreen
 import com.apexpredator.argus.ui.screens.HomeScreen
 import com.apexpredator.argus.ui.screens.NearMeScreen
 import com.apexpredator.argus.ui.screens.RadarScreen
@@ -124,6 +125,7 @@ fun AppNav(vm: MainViewModel = viewModel()) {
     val radarVm: RadarViewModel = viewModel(viewModelStoreOwner = activity)
     val spotterVm: SpotterViewModel = viewModel(viewModelStoreOwner = activity)
     val skyVm: SkyViewModel = viewModel(viewModelStoreOwner = activity)
+    val logbookVm: LogbookViewModel = viewModel(viewModelStoreOwner = activity)
     var camsTarget by remember {
         mutableStateOf<Pair<Double, Double>?>(null)
     }
@@ -185,7 +187,8 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                     onOpenCams = {
                         camsTarget = null
                         navController.navigate("cams")
-                    }
+                    },
+                    onOpenLogbook = { navController.navigate("logbook") }
                 )
             }
             composable("radar",
@@ -300,6 +303,16 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                         }
                     )
                 }
+            }
+            composable("logbook",
+                enterTransition = tabEnter,
+                exitTransition = tabExit,
+                popEnterTransition = tabPopEnter,
+                popExitTransition = tabPopExit) {
+                LogbookScreen(
+                    vm = logbookVm,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable("history",
                 enterTransition = tabEnter,

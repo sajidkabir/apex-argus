@@ -14,14 +14,19 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.apexpredator.argus.BuildConfig
+import com.apexpredator.argus.data.AlertScheduler
 import com.apexpredator.argus.data.HistoryEntry
 import com.apexpredator.argus.data.HistoryStore
+import com.apexpredator.argus.data.PrefsStore
 import com.apexpredator.argus.data.ReportKind
 import com.apexpredator.argus.data.UpdateInfo
 import com.apexpredator.argus.data.WeatherRepository
 import com.apexpredator.argus.data.fetchUpdateInfo
 import com.apexpredator.argus.decoder.MetarDecoder
 import com.apexpredator.argus.decoder.TafDecoder
+import com.apexpredator.argus.decoder.describeConditions
+import com.apexpredator.argus.decoder.flightCategory
+import com.apexpredator.argus.decoder.flightCategoryLabel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +46,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = WeatherRepository()
     private val historyStore = HistoryStore(application)
+    private val prefs = PrefsStore(application)
 
     var icaoInput by mutableStateOf("")
     var liveKind by mutableStateOf(ReportKind.METAR)
@@ -62,6 +68,99 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             SharingStarted.WhileSubscribed(5_000),
             emptyList()
         )
+
+    // Watched airports, mirrored from DataStore: the briefing card
+    // covers these, falling back to VGHS when none are watched.
+    var watchedAirports by mutableStateOf<Set<String>>(emptySet())
+        private set
+
+    // Balcony alert toggles (v2.3), mirrored from DataStore.
+    var alertSatPass by mutableStateOf(true)
+        private set
+    var alertHeavy by mutableStateOf(true)
+        private set
+    var alertEmergency by mutableStateOf(true)
+        private set
+
+    // Morning briefing: one plain-English line per watched airport.
+    var briefingMetars by mutableStateOf<List<String>>(emptyList())
+        private set
+    var briefingLoading by mutableStateOf(false)
+        private set
+
+    init {
+        viewModelScope.launch {
+            prefs.watchedAirports.collect { watchedAirports = it }
+        }
+        viewModelScope.launch {
+            prefs.alertSatPass.collect { alertSatPass = it }
+        }
+        viewModelScope.launch {
+            prefs.alertHeavy.collect { alertHeavy = it }
+        }
+        viewModelScope.launch {
+            prefs.alertEmergency.collect { alertEmergency = it }
+        }
+    }
+
+    fun setAlertSatPass(on: Boolean) {
+        viewModelScope.launch {
+            prefs.setAlertSatPass(on)
+            if (on) AlertScheduler.schedule(getApplication())
+        }
+    }
+
+    fun setAlertHeavy(on: Boolean) {
+        viewModelScope.launch {
+            prefs.setAlertHeavy(on)
+            if (on) AlertScheduler.schedule(getApplication())
+        }
+    }
+
+    fun setAlertEmergency(on: Boolean) {
+        viewModelScope.launch {
+            prefs.setAlertEmergency(on)
+            if (on) AlertScheduler.schedule(getApplication())
+        }
+    }
+
+    // Fetches a short plain-English METAR line for each watched
+    // airport (VGHS when none are watched). Failures are skipped
+    // silently: a missing line beats a broken card.
+    fun refreshBriefing() {
+        if (briefingLoading) return
+        briefingLoading = true
+        viewModelScope.launch {
+            try {
+                val stations = watchedAirports.ifEmpty { setOf("VGHS") }.take(3)
+                val lines = ArrayList<String>()
+                for (station in stations) {
+                    try {
+                        val raw = repository.fetchRaw(station, ReportKind.METAR)
+                        val decoded = MetarDecoder.decode(raw)
+                        val category = flightCategoryLabel(
+                            flightCategory(decoded.conditions)
+                        )
+                        val bits = describeConditions(decoded.conditions)
+                            .filter {
+                                it.startsWith("Wind") || it.startsWith("Visibility")
+                            }
+                            .take(2)
+                            .joinToString("; ")
+                        lines.add(
+                            if (bits.isEmpty()) "$station - $category"
+                            else "$station - $category: $bits"
+                        )
+                    } catch (e: Exception) {
+                        // Skip this station; the card shows the rest.
+                    }
+                }
+                briefingMetars = lines
+            } finally {
+                briefingLoading = false
+            }
+        }
+    }
 
     fun fetchLive() {
         val icao = icaoInput.trim().uppercase()

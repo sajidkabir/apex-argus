@@ -15,6 +15,8 @@ import com.apexpredator.argus.data.BoundingBox
 import com.apexpredator.argus.data.EnrichRepository
 import com.apexpredator.argus.data.FlightRoute
 import com.apexpredator.argus.data.GeoMath
+import com.apexpredator.argus.data.LogbookStore
+import com.apexpredator.argus.data.Sighting
 import com.apexpredator.argus.data.OpenSkyRepository
 import com.apexpredator.argus.data.PlaybackStore
 import com.apexpredator.argus.data.PrefsStore
@@ -52,6 +54,7 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
     private val satelliteRepo = SatelliteRepository(application)
     private val prefs = PrefsStore(application)
     private val playbackStore = PlaybackStore(application)
+    private val logbookStore = LogbookStore(application)
 
     // ---- Map / feed state ----
     var center by mutableStateOf(MapCenter(23.8103, 90.4125, 9.0))
@@ -371,6 +374,28 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
                 enrichInfo = info
                 enrichRoute = route
                 enrichLoading = false
+                // Sighting logbook (v2.3): identifying an aircraft on
+                // the radar, or from an airport sheet's traffic list,
+                // logs it locally with what enrichment knows.
+                val airportContext = selectedAirport?.ident
+                    ?: route?.origin?.icao
+                    ?: route?.origin?.iata
+                    ?: AirportDb.nearest(ac.latitude, ac.longitude, 1)
+                        .firstOrNull()?.first?.ident
+                val typeText = listOfNotNull(info?.manufacturer, info?.type)
+                    .joinToString(" ").ifEmpty { null }
+                logbookStore.add(
+                    Sighting(
+                        id = "${System.currentTimeMillis()}-${ac.icao24}",
+                        timestampMs = System.currentTimeMillis(),
+                        callsign = ac.callsign,
+                        icao24 = ac.icao24,
+                        aircraftType = typeText,
+                        airline = route?.airlineName,
+                        airportContext = airportContext,
+                        source = "radar",
+                    )
+                )
             }
         }
     }
