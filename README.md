@@ -30,6 +30,17 @@ progress).
 
 **Six tabs: Radar · Spotter · Sky · Airports · Tools · Chat**
 
+**Balcony alerts, logbook and morning briefing (Tools)**
+
+- Argus watches the sky in the background and notifies you when a
+  satellite pass starts within 10 minutes, a heavy aircraft is on
+  final to the nearest large airport, or an emergency squawk appears
+  within 80 km. Each alert type has its own toggle
+- Every aircraft you identify is logged locally in the Sighting
+  logbook, with counts, per-entry delete and clear-all
+- The morning briefing card gives watched-airport weather in plain
+  English, tonight's best satellite pass, and a traffic summary
+
 **Spotter (the balcony feature)**
 
 - Point your phone camera at an aircraft in the sky and Argus names it:
@@ -124,7 +135,8 @@ progress).
 Argus has no account system, no analytics and no ads. It only talks to
 public data services (OpenSky Network, aviationweather.gov, CelesTrak,
 RainViewer, adsbdb, Planespotters, OpenStreetMap) to fetch the data you
-are looking at. The watchlist and settings live on your phone only.
+are looking at. The watchlist, settings, sighting logbook and alert
+toggles live on your phone only.
 
 ## Data sources and credit
 

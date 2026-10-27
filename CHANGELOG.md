@@ -4,6 +4,41 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] - 2026-10-27
+
+The daily-habit release: Argus starts watching the sky for you, and
+keeps a record of everything you spot.
+
+### Added
+
+- Balcony alerts: a background check every 15 minutes (WorkManager)
+  that notifies you when a satellite pass over your location starts
+  within 10 minutes, when a heavy aircraft is on final approach to
+  the nearest large airport, or when any aircraft within 80 km
+  squawks an emergency code (7500, 7600, 7700). One toggle per alert
+  type on the Tools screen, and a correct notification-permission
+  flow: if you deny notifications, the toggles stay usable, nothing
+  posts, and a button takes you to the system settings page.
+- Sighting logbook: every aircraft you identify, from the radar,
+  Spotter, or an airport sheet's traffic list, is logged locally
+  with timestamp, callsign, type and airline when enrichment knows
+  them, and airport context. A Logbook screen from Tools shows the
+  list with totals (sightings, unique aircraft, airlines) and a
+  per-entry delete plus a clear-all option. Fully local storage,
+  nothing leaves the phone.
+- Morning briefing card on the Tools screen: plain-English METAR
+  summaries for your watched airports (VGHS when none are watched),
+  tonight's best satellite pass, and a one-line summary of the
+  traffic the radar is already tracking.
+
+### Notes
+
+- Alerts use your last known location, falling back to Dhaka when
+  location is off, the same fallback the Sky tab uses. The 15-minute
+  interval is the platform minimum for periodic background work.
+- A re-tap of the same aircraft within 30 minutes is not logged
+  twice; it is the same sheet reopened.
+
 ## [2.2.2] - 2026-10-26
 
 The godseyeview mesh: the camera map goes from 22 tourist webcams
