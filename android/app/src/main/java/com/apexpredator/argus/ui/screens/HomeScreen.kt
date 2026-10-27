@@ -359,17 +359,17 @@ private fun AlertSettingsCard(vm: MainViewModel) {
             AlertToggleRow(
                 label = "Satellite pass starting soon",
                 checked = vm.alertSatPass,
-                onChange = { vm.setAlertSatPass(it) },
+                onChange = { vm.updateAlertSatPass(it) },
             )
             AlertToggleRow(
                 label = "Heavy aircraft on final approach",
                 checked = vm.alertHeavy,
-                onChange = { vm.setAlertHeavy(it) },
+                onChange = { vm.updateAlertHeavy(it) },
             )
             AlertToggleRow(
                 label = "Emergency squawk nearby",
                 checked = vm.alertEmergency,
-                onChange = { vm.setAlertEmergency(it) },
+                onChange = { vm.updateAlertEmergency(it) },
             )
             if (!granted) {
                 Text(
