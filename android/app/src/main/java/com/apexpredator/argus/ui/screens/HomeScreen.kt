@@ -1,5 +1,14 @@
 package com.apexpredator.argus.ui.screens
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,17 +34,33 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.apexpredator.argus.data.AlertLogic
+import com.apexpredator.argus.data.AlertScheduler
+import com.apexpredator.argus.data.PassWindow
 import com.apexpredator.argus.data.ReportKind
+import com.apexpredator.argus.data.bestPassText
+import com.apexpredator.argus.data.buildBriefingLines
+import com.apexpredator.argus.data.trafficSummaryText
 import com.apexpredator.argus.ui.MainViewModel
+import com.apexpredator.argus.ui.RadarViewModel
+import com.apexpredator.argus.ui.SkyViewModel
 import com.apexpredator.argus.ui.UpdateUiState
 import com.apexpredator.argus.ui.theme.ApexTextSecondary
 
@@ -50,8 +75,18 @@ fun HomeScreen(
     onOpenSky: () -> Unit = {},
     onOpenAirports: () -> Unit = {},
     onOpenCams: () -> Unit = {},
+    onOpenLogbook: () -> Unit = {},
 ) {
-    LaunchedEffect(Unit) { vm.checkForUpdates() }
+    LaunchedEffect(Unit) {
+        vm.checkForUpdates()
+        vm.refreshBriefing()
+    }
+    // Activity-scoped view models shared with the other tabs, so the
+    // briefing card reads the same radar feed and satellite passes.
+    val activity = LocalContext.current as ComponentActivity
+    val radarVm: RadarViewModel = viewModel(viewModelStoreOwner = activity)
+    val skyVm: SkyViewModel = viewModel(viewModelStoreOwner = activity)
+    LaunchedEffect(Unit) { skyVm.start() }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -71,6 +106,10 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             UpdateBanner(vm)
+
+            MorningBriefingCard(vm = vm, skyVm = skyVm, radarVm = radarVm)
+
+            AlertSettingsCard(vm = vm)
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -202,10 +241,184 @@ fun HomeScreen(
                         OutlinedButton(onClick = onOpenAirports) { Text("Airports") }
                         OutlinedButton(onClick = onOpenCams) { Text("Live cams") }
                     }
-                    OutlinedButton(onClick = onOpenHistory) { Text("Decode history") }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onOpenHistory) { Text("Decode history") }
+                        OutlinedButton(onClick = onOpenLogbook) { Text("Logbook") }
+                    }
                 }
             }
         }
+    }
+}
+
+// v2.3 morning briefing: watched-airport weather in plain English,
+// tonight's best satellite pass, and a one-line traffic summary, all
+// from data the app already fetches. Nothing here starts a new feed
+// except the satellite passes the Sky tab computes anyway.
+@Composable
+private fun MorningBriefingCard(
+    vm: MainViewModel,
+    skyVm: SkyViewModel,
+    radarVm: RadarViewModel,
+) {
+    val best = AlertLogic.bestUpcomingPass(
+        skyVm.passes.map {
+            PassWindow(it.name, it.startMs, it.peakMs, it.maxElevationDeg)
+        },
+        System.currentTimeMillis(),
+    )
+    val lines = buildBriefingLines(
+        metarSummaries = vm.briefingMetars,
+        bestPassText = bestPassText(best),
+        trafficText = trafficSummaryText(
+            radarVm.liveAircraft.size,
+            radarVm.emergencies.size,
+        ),
+    )
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Morning briefing",
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (vm.briefingLoading && lines.isEmpty()) {
+                Text(
+                    "Loading watched airport weather...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ApexTextSecondary
+                )
+            } else if (lines.isEmpty()) {
+                Text(
+                    "No briefing yet. Watch an airport, then tap refresh.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ApexTextSecondary
+                )
+            } else {
+                for (line in lines) {
+                    Text(
+                        line,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+            OutlinedButton(onClick = { vm.refreshBriefing() }) {
+                Text("Refresh briefing")
+            }
+        }
+    }
+}
+
+// v2.3 balcony alerts: one toggle per alert type, plus the
+// notification permission flow. Denial is graceful: the toggles stay
+// usable, the worker simply posts nothing, and the settings button
+// takes the user to the system page where they can re-enable it.
+@Composable
+private fun AlertSettingsCard(vm: MainViewModel) {
+    val context = LocalContext.current
+    fun notificationsGranted(): Boolean {
+        if (Build.VERSION.SDK_INT < 33) return true
+        return ContextCompat.checkSelfPermission(
+            context, Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    var granted by remember { mutableStateOf(notificationsGranted()) }
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { result ->
+        granted = result
+        if (result) AlertScheduler.schedule(context)
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Balcony alerts",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "Checked every 15 minutes in the background. " +
+                    "Turn a type off and it never wakes you.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
+            AlertToggleRow(
+                label = "Satellite pass starting soon",
+                checked = vm.alertSatPass,
+                onChange = { vm.setAlertSatPass(it) },
+            )
+            AlertToggleRow(
+                label = "Heavy aircraft on final approach",
+                checked = vm.alertHeavy,
+                onChange = { vm.setAlertHeavy(it) },
+            )
+            AlertToggleRow(
+                label = "Emergency squawk nearby",
+                checked = vm.alertEmergency,
+                onChange = { vm.setAlertEmergency(it) },
+            )
+            if (!granted) {
+                Text(
+                    "Notifications are off for Apex Argus, so no " +
+                        "alert can reach you until you allow them.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = {
+                            if (Build.VERSION.SDK_INT >= 33) {
+                                launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        }
+                    ) { Text("Allow notifications") }
+                    OutlinedButton(
+                        onClick = {
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.parse("package:${context.packageName}")
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }
+                    ) { Text("Open app settings") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AlertToggleRow(
+    label: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 
