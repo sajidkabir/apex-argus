@@ -10,6 +10,9 @@
          Both are requested at runtime and everything degrades
          gracefully without them. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Balcony alerts (v2.3): requested at runtime from the Tools
+         screen, and everything degrades gracefully without it. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
