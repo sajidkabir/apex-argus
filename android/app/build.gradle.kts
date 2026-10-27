@@ -12,8 +12,8 @@ android {
         applicationId = "com.apexpredator.argus"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "2.2.2"
+        versionCode = 11
+        versionName = "2.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -106,6 +106,9 @@ dependencies {
     // Caltrans cameras publish HLS video streams.
     implementation("androidx.media3:media3-exoplayer:1.3.1")
     implementation("androidx.media3:media3-ui:1.3.1")
+    // WorkManager for the v2.3 balcony alerts: a periodic background
+    // check (15 minutes, the platform minimum) that survives reboots.
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     testImplementation("junit:junit:4.13.2")
 
