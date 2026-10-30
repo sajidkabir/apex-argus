@@ -18,7 +18,13 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <uses-feature android:name="android.hardware.location" android:required="false" />
 
+    <!-- v2.4: cleartext http is allowed so a user's own ADS-B
+         receiver on their LAN (dump1090 serves plain http by
+         design) can be fetched. Only the user-entered feed address
+         is ever fetched over http, and only when the feed is
+         enabled; every built-in service still uses https. -->
     <application
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
