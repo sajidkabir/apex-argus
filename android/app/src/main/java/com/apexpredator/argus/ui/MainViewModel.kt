@@ -218,23 +218,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val summary = packStore.savePack(airports, tleText, entries)
                 packSummary = summary
-                packStatus =
-                    "Pack saved: ${airports.size} airport(s), " +
-                        "${entries.size} weather reports, " +
-                        "${formatBytes(summary.totalBytes)}." +
-                        if (tleText.isEmpty()) {
+                packStatus = buildString {
+                    append("Pack saved: ${airports.size} airport(s), ")
+                    append("${entries.size} weather reports, ")
+                    append("${formatBytes(summary.totalBytes)}.")
+                    if (tleText.isEmpty()) {
+                        append(
                             " No satellite TLE was cached yet: open " +
                                 "the Sky tab once while online, then " +
                                 "download again for the satellite layer."
-                        } else {
-                            ""
-                        } +
-                        if (failures > 0) {
+                        )
+                    }
+                    if (failures > 0) {
+                        append(
                             " $failures report(s) could not be fetched " +
                                 "and are missing from the pack."
-                        } else {
-                            ""
-                        }
+                        )
+                    }
+                }
             } finally {
                 packBusy = false
             }
