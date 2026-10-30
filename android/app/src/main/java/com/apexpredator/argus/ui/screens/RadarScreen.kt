@@ -449,6 +449,9 @@ fun RadarScreen(
                     append("${vm.displayAircraft.size} aircraft in frame")
                 } else {
                     append("${vm.liveAircraft.size} aircraft")
+                    if (vm.localFeedCount > 0) {
+                        append(" · ${vm.localFeedCount} local")
+                    }
                     if (vm.uavCount > 0) append(" · ${vm.uavCount} UAV")
                     append(" · ${vm.satellites.size} satellites")
                     vm.lastUpdated?.let { append(" · $it") }
@@ -465,6 +468,17 @@ fun RadarScreen(
             vm.errorMessage?.let { msg ->
                 Text(
                     msg,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp)
+                )
+            }
+            vm.localFeedError?.let { msg ->
+                Text(
+                    "Local feed: $msg",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier

@@ -111,6 +111,10 @@ fun HomeScreen(
 
             AlertSettingsCard(vm = vm)
 
+            LocalFeedCard(radarVm = radarVm)
+
+            RegionPackCard(vm = vm)
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -396,6 +400,171 @@ private fun AlertSettingsCard(vm: MainViewModel) {
                             )
                         }
                     ) { Text("Open app settings") }
+                }
+            }
+        }
+    }
+}
+
+// v2.4 own ADS-B receiver: a dump1090 / readsb aircraft.json
+// endpoint on the user's own network. When enabled and reachable,
+// its aircraft merge into the radar, Spotter and Near Me alongside
+// OpenSky, marked as local, deduped by ICAO24 with the fresher
+// position winning. A dead feed never hides OpenSky traffic: its
+// error shows here and the map keeps working.
+@Composable
+private fun LocalFeedCard(radarVm: RadarViewModel) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Own ADS-B receiver",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "Your receiver on your network, e.g. a Raspberry Pi " +
+                    "running dump1090. Its traffic appears on the radar " +
+                    "and in Near Me with a LOCAL mark, and wins over " +
+                    "OpenSky for the same aircraft when it is fresher.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Use local feed",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = radarVm.localFeedEnabled,
+                    onCheckedChange = { radarVm.updateLocalFeedEnabled(it) }
+                )
+            }
+            OutlinedTextField(
+                value = radarVm.localFeedUrl,
+                onValueChange = { radarVm.updateLocalFeedUrl(it) },
+                label = { Text("Feed address") },
+                placeholder = { Text("http://192.168.1.10:8080/data/aircraft.json") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                "The address stays on your phone and is fetched only " +
+                    "by this app, on your own network. A receiver " +
+                    "serves plain http on a LAN by design, which is " +
+                    "why the app allows it for this feed.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
+            Text(
+                "Phone USB RTL-SDR is not included: driving an SDR " +
+                    "stick over USB needs a native driver outside " +
+                    "what this app ships. Use a Pi or PC receiver " +
+                    "on your LAN instead.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
+            radarVm.localFeedStatus?.let {
+                Text(it, style = MaterialTheme.typography.bodyMedium)
+            }
+            radarVm.localFeedError?.let {
+                Text(
+                    it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { radarVm.testLocalFeed() }) {
+                    Text("Test feed")
+                }
+                OutlinedButton(onClick = { radarVm.refreshNow() }) {
+                    Text("Refresh radar")
+                }
+            }
+        }
+    }
+}
+
+// v2.4 offline region pack: TLE plus METAR/TAF for chosen airports,
+// saved on the phone. Airports and runways are already bundled, so
+// the pack is what makes a region work with zero connectivity: the
+// weather decoder falls back to a pack report when live fetch fails.
+@Composable
+private fun RegionPackCard(vm: MainViewModel) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Offline region pack",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "Download satellite data and weather for airports " +
+                    "you choose, so the core data keeps working with " +
+                    "no connection. Leave the box empty to pack your " +
+                    "watched airports (VGHS when none are watched).",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
+            OutlinedTextField(
+                value = vm.packInput,
+                onValueChange = { vm.packInput = it.uppercase() },
+                label = { Text("Airport ICAO codes") },
+                placeholder = { Text("VGHS, KJFK, EGLL") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                "Pack size: ${vm.packSizeText()}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            vm.packAgeLine()?.let {
+                Text(it, style = MaterialTheme.typography.bodyMedium)
+            }
+            vm.packStatus?.let {
+                Text(it, style = MaterialTheme.typography.bodyMedium)
+            }
+            Text(
+                "Map tiles are cached differently: while online, " +
+                    "pan and zoom over your region on the Radar tab " +
+                    "and the map keeps those tiles on the phone, so " +
+                    "the map itself works offline for areas you have " +
+                    "already viewed. The pack does not download tiles.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { vm.downloadRegionPack() },
+                    enabled = !vm.packBusy,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (vm.packBusy) "Downloading..." else "Download pack")
+                }
+                OutlinedButton(
+                    onClick = { vm.deleteRegionPack() },
+                    enabled = vm.packSummary != null && !vm.packBusy
+                ) {
+                    Text("Delete pack")
                 }
             }
         }

@@ -86,6 +86,14 @@ fun NearMeScreen(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
+            vm.localFeedError?.let {
+                Text(
+                    "Local feed: $it",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -135,7 +143,7 @@ private fun NearbyRow(near: NearbyAircraft, onClick: () -> Unit) {
                             ac.isRotorcraft -> " · Helicopter"
                             ac.isEmergency -> " · EMERGENCY"
                             else -> ""
-                        },
+                        } + if (ac.isLocal) " · LOCAL" else "",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(

@@ -135,6 +135,10 @@ fun AircraftSheet(vm: RadarViewModel, ac: AircraftState) {
             ac.squawk?.let { if (ac.isEmergency) "$it (EMERGENCY)" else it }
         )
         DetailRow("Position", "%.4f, %.4f".format(Locale.US, ac.latitude, ac.longitude))
+        DetailRow(
+            "Source",
+            if (ac.isLocal) "Local receiver (your ADS-B feed)" else "OpenSky"
+        )
         DetailRow("On ground", if (ac.onGround) "Yes" else "No")
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
