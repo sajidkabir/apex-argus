@@ -46,6 +46,14 @@ class PrefsStore(private val context: Context) {
     val lastEmergencyAlertKey: Flow<String?> =
         context.argusDataStore.data.map { it[KEY_LAST_EMERGENCY_ALERT] }
 
+    // Own ADS-B receiver (v2.4): off until the user types an endpoint
+    // and enables it. The address stays on the phone and is only ever
+    // fetched from the app itself, on the user's own network.
+    val localFeedEnabled: Flow<Boolean> =
+        context.argusDataStore.data.map { it[KEY_LOCAL_FEED_ENABLED] ?: false }
+    val localFeedUrl: Flow<String> =
+        context.argusDataStore.data.map { it[KEY_LOCAL_FEED_URL] ?: "" }
+
     suspend fun toggleWatchedAircraft(hex: String) {
         val clean = hex.trim().lowercase()
         context.argusDataStore.edit { prefs ->
@@ -96,6 +104,14 @@ class PrefsStore(private val context: Context) {
         context.argusDataStore.edit { it[KEY_LAST_EMERGENCY_ALERT] = key }
     }
 
+    suspend fun setLocalFeedEnabled(on: Boolean) {
+        context.argusDataStore.edit { it[KEY_LOCAL_FEED_ENABLED] = on }
+    }
+
+    suspend fun setLocalFeedUrl(url: String) {
+        context.argusDataStore.edit { it[KEY_LOCAL_FEED_URL] = url.trim() }
+    }
+
     companion object {
         const val DEFAULT_REFRESH_SECONDS = 180
         private val KEY_WATCHED_AIRCRAFT = stringSetPreferencesKey("watched_aircraft")
@@ -108,5 +124,7 @@ class PrefsStore(private val context: Context) {
         private val KEY_LAST_SAT_ALERT = stringPreferencesKey("last_sat_alert")
         private val KEY_LAST_HEAVY_ALERT = stringPreferencesKey("last_heavy_alert")
         private val KEY_LAST_EMERGENCY_ALERT = stringPreferencesKey("last_emergency_alert")
+        private val KEY_LOCAL_FEED_ENABLED = booleanPreferencesKey("local_feed_enabled")
+        private val KEY_LOCAL_FEED_URL = stringPreferencesKey("local_feed_url")
     }
 }

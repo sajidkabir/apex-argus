@@ -22,6 +22,15 @@ data class AircraftState(
     // ADS-B emitter category, only present in extended state vectors:
     // 8 rotorcraft, 14 UAV/drone, 6 heavy, 2 light, 9 glider, and so on.
     val category: Int? = null,
+    // True when this position came from the user's own ADS-B receiver
+    // (v2.4 local feed) rather than OpenSky; the map, sheets and
+    // Near Me rows mark such traffic distinctly.
+    val isLocal: Boolean = false,
+    // When this position was observed, epoch milliseconds. OpenSky
+    // state vectors carry time_position (index 3, seconds); dump1090
+    // carries seen_pos (seconds ago). Null means unknown, and feed
+    // fusion treats an unknown timestamp as a tie, won by local.
+    val lastSeenMs: Long? = null,
 ) {
     val altitudeFt: Double? get() = baroAltitudeM?.times(M_TO_FT)
     val speedKt: Double? get() = velocityMs?.times(MS_TO_KT)
@@ -65,6 +74,11 @@ fun parseAircraftStates(body: String): List<AircraftState> {
                 verticalRateMs = s.optDoubleOrNull(IDX_VERT_RATE),
                 squawk = s.optStringOrNull(IDX_SQUAWK),
                 category = s.optIntOrNull(IDX_CATEGORY),
+                lastSeenMs = s.optLongOrNull(IDX_TIME_POSITION)?.times(1000),
+                // Slot 18 is Argus's own extension, written by
+                // PlaybackStore so a recorded frame keeps the local
+                // mark; ordinary OpenSky vectors have no slot 18.
+                isLocal = if (s.length() > IDX_LOCAL) s.optBoolean(IDX_LOCAL, false) else false,
             )
         )
     }
@@ -77,6 +91,12 @@ private fun org.json.JSONArray.optDoubleOrNull(index: Int): Double? =
 private fun org.json.JSONArray.optIntOrNull(index: Int): Int? =
     if (index >= length() || isNull(index)) null else getInt(index)
 
+private fun org.json.JSONArray.optLongOrNull(index: Int): Long? {
+    if (index >= length() || isNull(index)) return null
+    val value = get(index)
+    return if (value is Number) value.toLong() else null
+}
+
 private fun org.json.JSONArray.optStringOrNull(index: Int): String? =
     if (index >= length() || isNull(index)) null else getString(index)
 
@@ -84,6 +104,7 @@ private fun org.json.JSONArray.optStringSafe(index: Int): String =
     optStringOrNull(index) ?: ""
 
 private const val IDX_ICAO24 = 0
+private const val IDX_TIME_POSITION = 3
 private const val IDX_CALLSIGN = 1
 private const val IDX_COUNTRY = 2
 private const val IDX_LON = 5
@@ -95,3 +116,4 @@ private const val IDX_TRACK = 10
 private const val IDX_VERT_RATE = 11
 private const val IDX_SQUAWK = 14
 private const val IDX_CATEGORY = 17
+private const val IDX_LOCAL = 18

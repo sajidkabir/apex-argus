@@ -65,14 +65,16 @@ class PlaybackStore(private val context: Context) {
     }
 }
 
-// Serializes back into the OpenSky 18-slot state-vector layout so the
-// existing parser reads snapshots with zero new parsing code.
+// Serializes back into the OpenSky 18-slot state-vector layout, plus
+// Argus's own slot 18 for the local-feed mark, so the existing parser
+// reads snapshots and a recorded frame keeps its LOCAL marking.
 private fun AircraftState.toStateVector(): JSONArray {
     val arr = JSONArray()
-    val slots = arrayOfNulls<Any>(18)
+    val slots = arrayOfNulls<Any>(19)
     slots[0] = icao24
     slots[1] = callsign
     slots[2] = originCountry
+    slots[3] = lastSeenMs?.div(1000)
     slots[5] = longitude
     slots[6] = latitude
     slots[7] = baroAltitudeM
@@ -82,6 +84,7 @@ private fun AircraftState.toStateVector(): JSONArray {
     slots[11] = verticalRateMs
     slots[14] = squawk
     slots[17] = category
+    slots[18] = isLocal
     for (slot in slots) arr.put(slot ?: JSONObject.NULL)
     return arr
 }
