@@ -4,6 +4,51 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.4.0] - 2026-10-30
+
+The power release: your own receiver joins the picture, and a region
+keeps working with no connection at all.
+
+### Added
+
+- Own ADS-B receiver feed: a settings card on the Tools screen where
+  you enter a local dump1090 / readsb aircraft.json endpoint on your
+  own network (for example
+  http://192.168.1.10:8080/data/aircraft.json). When enabled and
+  reachable, its aircraft merge into the radar, Spotter and Near Me
+  alongside OpenSky, marked distinctly (cyan ring on the map, LOCAL
+  tag in lists, "Local receiver" source in the detail sheet), and
+  deduped by ICAO24 with the fresher position winning (ties go to
+  the local receiver). When OpenSky is down but the receiver
+  answers, local traffic alone still fills the map, which works
+  with no internet at all.
+- Clear feed error handling: a dead, mistyped or unreachable feed
+  shows a plain reason on the Tools card, the radar screen and Near
+  Me, and never hides working OpenSky traffic. The feed address
+  stays on the phone and is fetched only by the app itself.
+- Offline region pack: a download manager on the Tools screen that
+  saves cached satellite TLE plus the latest METAR and TAF for
+  airports you choose (watched airports, or VGHS, when the box is
+  empty). The card shows the pack's airports, age, size and storage
+  used, warns when a pack is over a week old, and offers delete.
+  With no connection, the weather decoder falls back to a saved
+  pack report for that airport, labelled as such, instead of
+  failing outright. Airports and runways are already bundled in
+  the app, so they need no pack.
+- Honest map-tile note: the pack does not download map tiles.
+  Osmdroid caches tiles on the phone as you pan and zoom, so the
+  card tells you to view your region while online first; the map
+  then works offline for areas you have already viewed.
+
+### Notes
+
+- Phone USB RTL-SDR is not shipped: driving an SDR stick over USB
+  needs a native driver outside what this app ships. Use a Pi or PC
+  receiver on your LAN instead.
+- A receiver serves plain http on a LAN by design, so the app
+  allows cleartext traffic for the user-entered feed address only
+  in practice; every built-in service still uses https.
+
 ## [2.3.0] - 2026-10-27
 
 The daily-habit release: Argus starts watching the sky for you, and

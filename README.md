@@ -30,6 +30,20 @@ progress).
 
 **Six tabs: Radar · Spotter · Sky · Airports · Tools · Chat**
 
+**Own ADS-B receiver and offline region pack (Tools, v2.4)**
+
+- Point Argus at your own dump1090 / readsb receiver on your LAN
+  (for example http://192.168.1.10:8080/data/aircraft.json) and its
+  traffic merges into the radar, Spotter and Near Me alongside
+  OpenSky, marked LOCAL, deduped by ICAO24 with the fresher position
+  winning. A dead feed shows a plain reason and never hides OpenSky
+  traffic
+- Download an offline region pack: satellite TLE plus METAR/TAF for
+  airports you choose, with size, age and delete on the Tools card.
+  With no connection, the weather decoder falls back to a saved pack
+  report. Map tiles cache as you view an area while online, so view
+  your region first and the map works offline too
+
 **Balcony alerts, logbook and morning briefing (Tools)**
 
 - Argus watches the sky in the background and notifies you when a
