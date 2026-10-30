@@ -17,8 +17,16 @@ import com.apexpredator.argus.BuildConfig
 import com.apexpredator.argus.data.AlertScheduler
 import com.apexpredator.argus.data.HistoryEntry
 import com.apexpredator.argus.data.HistoryStore
+import com.apexpredator.argus.data.PackWeatherEntry
 import com.apexpredator.argus.data.PrefsStore
+import com.apexpredator.argus.data.RegionPackStore
+import com.apexpredator.argus.data.RegionPackSummary
 import com.apexpredator.argus.data.ReportKind
+import com.apexpredator.argus.data.SatelliteRepository
+import com.apexpredator.argus.data.formatBytes
+import com.apexpredator.argus.data.isPackStale
+import com.apexpredator.argus.data.packAgeText
+import com.apexpredator.argus.data.parsePackAirports
 import com.apexpredator.argus.data.UpdateInfo
 import com.apexpredator.argus.data.WeatherRepository
 import com.apexpredator.argus.data.fetchUpdateInfo
@@ -27,8 +35,10 @@ import com.apexpredator.argus.decoder.TafDecoder
 import com.apexpredator.argus.decoder.describeConditions
 import com.apexpredator.argus.decoder.flightCategory
 import com.apexpredator.argus.decoder.flightCategoryLabel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -47,6 +57,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = WeatherRepository()
     private val historyStore = HistoryStore(application)
     private val prefs = PrefsStore(application)
+    private val packStore = RegionPackStore(application)
+    private val satelliteRepo = SatelliteRepository(application)
 
     var icaoInput by mutableStateOf("")
     var liveKind by mutableStateOf(ReportKind.METAR)
@@ -88,7 +100,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var briefingLoading by mutableStateOf(false)
         private set
 
+    // Offline region pack (v2.4): downloaded TLE plus METAR/TAF for
+    // chosen airports, stored on the phone. Airports themselves are
+    // already bundled, so the pack is what makes a region usable
+    // with zero connectivity.
+    var packInput by mutableStateOf("")
+    var packSummary by mutableStateOf<RegionPackSummary?>(null)
+        private set
+    var packStatus by mutableStateOf<String?>(null)
+        private set
+    var packBusy by mutableStateOf(false)
+        private set
+
+    fun packSizeText(): String =
+        packSummary?.let { formatBytes(it.totalBytes) } ?: "No pack saved"
+
+    fun packAgeLine(): String? =
+        packSummary?.let {
+            val age = packAgeText(it.createdMs, System.currentTimeMillis())
+            val stale = if (isPackStale(it.createdMs, System.currentTimeMillis())) {
+                ". Over a week old: refresh it before relying on it offline."
+            } else {
+                ""
+            }
+            "Saved $age for ${it.airports.joinToString(", ")}$stale"
+        }
+
     init {
+        refreshPackSummary()
         viewModelScope.launch {
             prefs.watchedAirports.collect { watchedAirports = it }
         }
@@ -121,6 +160,95 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             prefs.setAlertEmergency(on)
             if (on) AlertScheduler.schedule(getApplication())
+        }
+    }
+
+    // ---- Offline region pack (v2.4) ----
+
+    fun refreshPackSummary() {
+        viewModelScope.launch {
+            packSummary = packStore.loadSummary()
+        }
+    }
+
+    fun downloadRegionPack() {
+        if (packBusy) return
+        val airports = parsePackAirports(packInput)
+            .ifEmpty { watchedAirports.ifEmpty { setOf("VGHS") }.toList() }
+        packBusy = true
+        packStatus = "Downloading pack for ${airports.joinToString(", ")}..."
+        viewModelScope.launch {
+            try {
+                // Refresh the TLE cache first so the pack carries
+                // current elements, not whatever happens to be cached.
+                try {
+                    satelliteRepo.load()
+                } catch (e: Exception) {
+                    // A missing TLE cache still leaves a useful pack:
+                    // the weather entries below are the core data.
+                }
+                val tleText = withContext(Dispatchers.IO) {
+                    packStore.tleCacheText()
+                }
+                val entries = ArrayList<PackWeatherEntry>()
+                var failures = 0
+                for (icao in airports) {
+                    for (kind in ReportKind.values()) {
+                        try {
+                            val raw = repository.fetchRaw(icao, kind)
+                            entries.add(
+                                PackWeatherEntry(
+                                    icao = icao,
+                                    kind = kind.name,
+                                    raw = raw,
+                                    fetchedMs = System.currentTimeMillis(),
+                                )
+                            )
+                        } catch (e: Exception) {
+                            failures++
+                        }
+                    }
+                }
+                if (entries.isEmpty()) {
+                    packStatus =
+                        "Pack download failed: no METAR or TAF could " +
+                            "be fetched for those airports. Check your " +
+                            "connection and the ICAO codes."
+                    return@launch
+                }
+                val summary = packStore.savePack(airports, tleText, entries)
+                packSummary = summary
+                packStatus =
+                    "Pack saved: ${airports.size} airport(s), " +
+                        "${entries.size} weather reports, " +
+                        "${formatBytes(summary.totalBytes)}." +
+                        if (tleText.isEmpty()) {
+                            " No satellite TLE was cached yet: open " +
+                                "the Sky tab once while online, then " +
+                                "download again for the satellite layer."
+                        } else {
+                            ""
+                        } +
+                        if (failures > 0) {
+                            " $failures report(s) could not be fetched " +
+                                "and are missing from the pack."
+                        } else {
+                            ""
+                        }
+            } finally {
+                packBusy = false
+            }
+        }
+    }
+
+    fun deleteRegionPack() {
+        viewModelScope.launch {
+            if (packStore.deletePack()) {
+                packSummary = null
+                packStatus = "Offline pack deleted."
+            } else {
+                packStatus = "No offline pack to delete."
+            }
         }
     }
 
@@ -180,7 +308,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     historyStore.add(raw, kind, decoded.station)
                 }
             } catch (e: Exception) {
-                errorMessage = e.message ?: "Something went wrong. Try again."
+                // v2.4 offline fallback: with no connection, a saved
+                // region pack report still decodes, labelled as such
+                // instead of failing outright.
+                val packed = try {
+                    packStore.readWeather(icao, kind)
+                } catch (pe: Exception) {
+                    null
+                }
+                if (packed != null) {
+                    try {
+                        result = decodeRaw(packed, kind)
+                        errorMessage =
+                            "Live fetch failed. Showing the saved " +
+                                "offline pack report for $icao."
+                    } catch (de: Exception) {
+                        errorMessage = e.message ?: "Something went wrong. Try again."
+                    }
+                } else {
+                    errorMessage = e.message ?: "Something went wrong. Try again."
+                }
             } finally {
                 isLoading = false
             }

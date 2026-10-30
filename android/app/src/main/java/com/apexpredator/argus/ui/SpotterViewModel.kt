@@ -15,14 +15,20 @@ import com.apexpredator.argus.data.EnrichRepository
 import com.apexpredator.argus.data.FlightRoute
 import com.apexpredator.argus.data.GeoFix
 import com.apexpredator.argus.data.GeoMath
+import com.apexpredator.argus.data.LocalFeedRepository
+import com.apexpredator.argus.data.LocalFeedResult
 import com.apexpredator.argus.data.LocationRepository
 import com.apexpredator.argus.data.LogbookStore
 import com.apexpredator.argus.data.OpenSkyRepository
+import com.apexpredator.argus.data.isValidLocalFeedUrl
+import com.apexpredator.argus.data.mergeAircraft
+import com.apexpredator.argus.data.normalizeLocalFeedUrl
 import com.apexpredator.argus.data.Sighting
 import com.apexpredator.argus.data.PrefsStore
 import com.apexpredator.argus.data.SkyMath
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 // One nearby aircraft with everything the balcony questions need:
@@ -42,6 +48,7 @@ class SpotterViewModel(application: Application) : AndroidViewModel(application)
 
     private val locationRepo = LocationRepository(application)
     private val opensky = OpenSkyRepository()
+    private val localFeedRepo = LocalFeedRepository()
     private val enrich = EnrichRepository()
     private val prefs = PrefsStore(application)
     private val logbookStore = LogbookStore(application)
@@ -55,6 +62,10 @@ class SpotterViewModel(application: Application) : AndroidViewModel(application)
     var isLoading by mutableStateOf(false)
         private set
     var errorMessage by mutableStateOf<String?>(null)
+        private set
+    // v2.4: a dead local feed must not hide working OpenSky traffic
+    // here either, so its problem is reported separately.
+    var localFeedError by mutableStateOf<String?>(null)
         private set
 
     var selected by mutableStateOf<AircraftState?>(null)
@@ -131,8 +142,40 @@ class SpotterViewModel(application: Application) : AndroidViewModel(application)
             try {
                 val half = 1.3
                 val bbox = BoundingBox(f.lat - half, f.lon - half, f.lat + half, f.lon + half)
-                aircraft = opensky.fetchStates(bbox)
-                errorMessage = null
+                var openskyError: String? = null
+                val openskyStates = try {
+                    opensky.fetchStates(bbox)
+                } catch (e: Exception) {
+                    openskyError = e.message ?: "Could not load nearby traffic."
+                    null
+                }
+                // v2.4 local feed: same merge as the radar, so Near
+                // Me and Spotter see the user's own receiver traffic
+                // marked as local, including when OpenSky is down.
+                var localStates: List<AircraftState> = emptyList()
+                localFeedError = null
+                try {
+                    val enabled = first(prefs.localFeedEnabled)
+                    val url = normalizeLocalFeedUrl(first(prefs.localFeedUrl))
+                    if (enabled && isValidLocalFeedUrl(url)) {
+                        when (val result = localFeedRepo.fetch(url)) {
+                            is LocalFeedResult.Ok -> localStates = result.aircraft
+                            is LocalFeedResult.Error -> localFeedError = result.message
+                        }
+                    }
+                } catch (e: Exception) {
+                    localFeedError = "Local feed could not be read."
+                }
+                aircraft = when {
+                    openskyStates != null -> mergeAircraft(openskyStates, localStates)
+                    localStates.isNotEmpty() -> localStates
+                    else -> emptyList()
+                }
+                errorMessage = if (openskyStates == null && localStates.isEmpty()) {
+                    openskyError ?: "Could not load nearby traffic."
+                } else {
+                    null
+                }
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Could not load nearby traffic."
             } finally {

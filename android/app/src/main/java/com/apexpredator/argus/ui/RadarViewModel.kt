@@ -14,6 +14,11 @@ import com.apexpredator.argus.data.AirportDb
 import com.apexpredator.argus.data.BoundingBox
 import com.apexpredator.argus.data.EnrichRepository
 import com.apexpredator.argus.data.FlightRoute
+import com.apexpredator.argus.data.LocalFeedRepository
+import com.apexpredator.argus.data.LocalFeedResult
+import com.apexpredator.argus.data.isValidLocalFeedUrl
+import com.apexpredator.argus.data.mergeAircraft
+import com.apexpredator.argus.data.normalizeLocalFeedUrl
 import com.apexpredator.argus.data.GeoMath
 import com.apexpredator.argus.data.LogbookStore
 import com.apexpredator.argus.data.Sighting
@@ -48,6 +53,7 @@ enum class AltBand { ALL, LOW, MID, HIGH }
 class RadarViewModel(application: Application) : AndroidViewModel(application) {
 
     private val opensky = OpenSkyRepository()
+    private val localFeedRepo = LocalFeedRepository()
     private val weather = WeatherRepository()
     private val enrich = EnrichRepository()
     private val rainViewer = RainViewerRepository()
@@ -67,6 +73,21 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
         private set
     var errorMessage by mutableStateOf<String?>(null)
     var lastUpdated by mutableStateOf<String?>(null)
+        private set
+
+    // Own ADS-B receiver (v2.4), mirrored from DataStore. The feed
+    // merges into liveAircraft on every radar refresh; localFeedError
+    // is kept separate from errorMessage so a dead LAN feed never
+    // hides working OpenSky traffic, and vice versa.
+    var localFeedEnabled by mutableStateOf(false)
+        private set
+    var localFeedUrl by mutableStateOf("")
+        private set
+    var localFeedCount by mutableStateOf(0)
+        private set
+    var localFeedError by mutableStateOf<String?>(null)
+        private set
+    var localFeedStatus by mutableStateOf<String?>(null)
         private set
 
     // ---- Selection ----
@@ -175,6 +196,12 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch {
             prefs.metricUnits.collect { metricUnits = it }
+        }
+        viewModelScope.launch {
+            prefs.localFeedEnabled.collect { localFeedEnabled = it }
+        }
+        viewModelScope.launch {
+            prefs.localFeedUrl.collect { localFeedUrl = it }
         }
         viewModelScope.launch {
             try {
@@ -288,20 +315,90 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
         refresh(bbox)
     }
 
+    // Fetches the local receiver feed without throwing: on any
+    // failure the radar keeps its OpenSky traffic and the Tools card
+    // shows the reason. Returns the local aircraft, or empty when
+    // the feed is disabled, unconfigured or unreachable.
+    private suspend fun fetchLocalQuietly(): List<AircraftState> {
+        if (!localFeedEnabled) return emptyList()
+        val url = normalizeLocalFeedUrl(localFeedUrl)
+        if (!isValidLocalFeedUrl(url)) {
+            localFeedError =
+                "Local feed enabled but no valid address is saved. " +
+                    "Enter the receiver endpoint in Tools."
+            localFeedCount = 0
+            return emptyList()
+        }
+        return when (val result = localFeedRepo.fetch(url)) {
+            is LocalFeedResult.Ok -> {
+                localFeedError = null
+                localFeedCount = result.aircraft.size
+                localFeedStatus =
+                    "Local feed: ${result.aircraft.size} aircraft"
+                result.aircraft
+            }
+            is LocalFeedResult.Error -> {
+                localFeedError = result.message
+                localFeedCount = 0
+                emptyList()
+            }
+        }
+    }
+
+    fun testLocalFeed() {
+        viewModelScope.launch {
+            if (!localFeedEnabled) {
+                localFeedStatus =
+                    "Enable the feed and save an address first."
+                return@launch
+            }
+            localFeedStatus = "Testing local feed..."
+            localFeedError = null
+            fetchLocalQuietly()
+            if (localFeedError == null) {
+                localFeedStatus =
+                    "Local feed reachable: $localFeedCount aircraft " +
+                        "on the last test."
+            }
+        }
+    }
+
     private fun refresh(bbox: BoundingBox) {
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
             isLoading = true
             errorMessage = null
             try {
-                val fresh = opensky.fetchStates(bbox)
+                var openskyError: String? = null
+                val fresh = try {
+                    opensky.fetchStates(bbox)
+                } catch (e: Exception) {
+                    openskyError = e.message ?: "Could not load flight data."
+                    null
+                }
+                val local = fetchLocalQuietly()
+                val merged = when {
+                    fresh != null -> mergeAircraft(fresh, local)
+                    local.isNotEmpty() -> {
+                        // OpenSky down but the LAN receiver answers:
+                        // local traffic alone still beats an empty map,
+                        // and it works with no internet at all.
+                        localFeedStatus =
+                            "OpenSky unreachable. Showing local " +
+                                "receiver traffic only."
+                        local
+                    }
+                    else -> throw IllegalStateException(
+                        openskyError ?: "Could not load flight data."
+                    )
+                }
                 prevPositions = liveAircraft.associate {
                     it.icao24 to (it.latitude to it.longitude)
                 }
-                liveAircraft = fresh
-                viewModelScope.launch { playbackStore.record(fresh) }
+                liveAircraft = merged
+                viewModelScope.launch { playbackStore.record(merged) }
                 selected?.let { sel ->
-                    selected = fresh.firstOrNull { it.icao24 == sel.icao24 }
+                    selected = merged.firstOrNull { it.icao24 == sel.icao24 }
                 }
                 selectedAirport?.let { computeAirportTraffic(it) }
                 lastUpdated = "Updated " +
@@ -463,6 +560,17 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateRefreshSeconds(seconds: Int) {
         viewModelScope.launch { prefs.setRefreshSeconds(seconds) }
+    }
+
+    // v2.4 local feed settings. Named update* on purpose: a var
+    // named localFeedEnabled already generates a JVM setter, so a
+    // fun setLocalFeedEnabled would clash (the v2.3 lesson).
+    fun updateLocalFeedEnabled(on: Boolean) {
+        viewModelScope.launch { prefs.setLocalFeedEnabled(on) }
+    }
+
+    fun updateLocalFeedUrl(url: String) {
+        viewModelScope.launch { prefs.setLocalFeedUrl(url) }
     }
 
     fun updateMetricUnits(metric: Boolean) {

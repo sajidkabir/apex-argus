@@ -69,6 +69,13 @@ class AircraftOverlay(
         strokeWidth = 3f
         color = Color.parseColor("#FFD54F")
     }
+    // v2.4: traffic from the user's own receiver gets its own ring
+    // (cyan), distinct from emergency red and watched gold.
+    private val localPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+        color = Color.parseColor("#4DD0E1")
+    }
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#E8EAF0")
         textSize = 30f
@@ -103,6 +110,9 @@ class AircraftOverlay(
             }
             if (ac.icao24.lowercase() in watchedHexes) {
                 canvas.drawCircle(x, y, size * 1.25f, watchedPaint)
+            }
+            if (ac.isLocal) {
+                canvas.drawCircle(x, y, size * 1.4f, localPaint)
             }
 
             val paint = when {
@@ -165,7 +175,7 @@ class AircraftOverlay(
                 ac.isRotorcraft -> " · HELI"
                 ac.category == 6 -> " · HVY"
                 else -> ""
-            }
+            } + if (ac.isLocal) " · LOCAL" else ""
             if (showLabels) {
                 val textWidth = labelPaint.measureText(label)
                 val pad = 6f * density
