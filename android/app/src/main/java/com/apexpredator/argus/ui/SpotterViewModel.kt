@@ -155,8 +155,8 @@ class SpotterViewModel(application: Application) : AndroidViewModel(application)
                 var localStates: List<AircraftState> = emptyList()
                 localFeedError = null
                 try {
-                    val enabled = first(prefs.localFeedEnabled)
-                    val url = normalizeLocalFeedUrl(first(prefs.localFeedUrl))
+                    val enabled = prefs.localFeedEnabled.first()
+                    val url = normalizeLocalFeedUrl(prefs.localFeedUrl.first())
                     if (enabled && isValidLocalFeedUrl(url)) {
                         when (val result = localFeedRepo.fetch(url)) {
                             is LocalFeedResult.Ok -> localStates = result.aircraft
