@@ -30,6 +30,29 @@ progress).
 
 **Six tabs: Radar · Spotter · Sky · Airports · Tools · Chat**
 
+**Radar timelapse export and community sightings (v2.5)**
+
+- Timelapse export: open the radar playback bar and export the
+  recorded frames (aircraft plus satellites, the same fused picture)
+  as an MP4 video, with a share sheet action. Choose all recorded
+  frames, the last 30, or the last 10. Frames are drawn on a canvas
+  from the recorded snapshot data, so the export works even when the
+  radar tab is not on screen. The recording window is the playback
+  window itself: the frames collected while the radar has been
+  running (up to the last 60 fetches)
+- Community sightings (Tools): a public Argus sightings channel over
+  Nostr, using the same Argus identity as Argus Chat. Post a sighting
+  (callsign or aircraft, airport or location, optional short note,
+  optional photo link) and read recent sightings from every Argus
+  user, with each poster's username. The channel convention is plain
+  kind-1 text notes tagged #argus-sighting, with aircraft and
+  location tags, so any Nostr client can read the feed. Posts are
+  public to every reader of the channel: do not post anything
+  private. Argus hosts no photos, so a photo rides along only as a
+  link you already host somewhere public. Hiding a poster is local
+  only: it keeps their posts off your phone and changes nothing for
+  anyone else
+
 **Own ADS-B receiver and offline region pack (Tools, v2.4)**
 
 - Point Argus at your own dump1090 / readsb receiver on your LAN
@@ -150,7 +173,11 @@ Argus has no account system, no analytics and no ads. It only talks to
 public data services (OpenSky Network, aviationweather.gov, CelesTrak,
 RainViewer, adsbdb, Planespotters, OpenStreetMap) to fetch the data you
 are looking at. The watchlist, settings, sighting logbook and alert
-toggles live on your phone only.
+toggles live on your phone only. Two exceptions, both at your choice:
+Argus Chat messages go to the people you message over Nostr relays,
+and community sightings are public posts to the shared
+#argus-sighting channel, readable by anyone. Hiding a sightings
+poster is local only and reports nothing.
 
 ## Data sources and credit
 

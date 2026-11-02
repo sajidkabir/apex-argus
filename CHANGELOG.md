@@ -4,6 +4,50 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.5.0] - 2026-11-02
+
+The community release: the radar recording becomes a video you can
+share, and sightings become a channel everyone can read.
+
+### Added
+
+- Radar timelapse export: from the playback bar, export the recorded
+  radar frames as an MP4 video (H.264, 720x720, 10 fps, one frame per
+  recorded snapshot) with a share sheet action. Choose all recorded
+  frames, the last 30, or the last 10. Frames are drawn on a canvas
+  from snapshot data, aircraft as heading triangles (cyan ring for
+  local-receiver traffic) and satellites as gold stars, fitted to
+  the traffic itself, with a timestamp on each frame. Playback
+  snapshots now also record satellite positions alongside aircraft,
+  so the video shows the same fused picture as the live radar;
+  snapshots recorded by older versions still load, with no
+  satellites in them.
+- Public sightings channel: a Community sightings screen from Tools,
+  over the same Nostr identity and relays as Argus Chat. Publish a
+  sighting (callsign or aircraft, airport or location, optional
+  short note, optional photo link) and read recent sightings from
+  every Argus user, with the poster's username. The channel
+  convention is plain kind-1 text notes tagged #argus-sighting, with
+  aircraft and location tags, documented in the README so any Nostr
+  client can read the feed.
+- Report and hide affordance: every sighting row has "Hide posts
+  from this user", which hides that poster locally only (nothing is
+  reported or deleted for anyone else), with an "Unhide all" control
+  while anyone is hidden. The screen states plainly, before anyone
+  posts, that channel posts are public and that Argus hosts no
+  photos: a photo rides along only as a link the poster already
+  hosts somewhere public.
+
+### Notes
+
+- The timelapse format shipped is MP4, not an animated WebP or GIF:
+  MediaCodec H.264 encoding is available on every device the app
+  targets, and the video shares through the standard share sheet.
+- The recording window is the playback window: the frames collected
+  while the radar has been running (up to the last 60 fetches), so a
+  video needs at least 2 recorded frames and longer recordings need
+  the radar left open across refreshes.
+
 ## [2.4.0] - 2026-10-30
 
 The power release: your own receiver joins the picture, and a region
