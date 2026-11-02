@@ -10,15 +10,24 @@ import java.io.File
 // One recorded radar frame for the playback feature: every successful
 // live fetch is snapshotted to disk, so the user can scrub back through
 // the last hour of traffic like the playback mode in paid trackers.
-data class Snapshot(val epochMs: Long, val aircraft: List<AircraftState>)
+// Satellites ride along from v2.5 (empty for older snapshots), so a
+// timelapse export shows the same fused picture as the live radar.
+data class Snapshot(
+    val epochMs: Long,
+    val aircraft: List<AircraftState>,
+    val satellites: List<SatellitePosition> = emptyList()
+)
 
 class PlaybackStore(private val context: Context) {
 
     private val dir: File
         get() = File(context.filesDir, "playback").apply { mkdirs() }
 
-    suspend fun record(states: List<AircraftState>) {
-        if (states.isEmpty()) return
+    suspend fun record(
+        states: List<AircraftState>,
+        satellites: List<SatellitePosition> = emptyList()
+    ) {
+        if (states.isEmpty() && satellites.isEmpty()) return
         withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
             val root = JSONObject()
@@ -26,6 +35,16 @@ class PlaybackStore(private val context: Context) {
             val arr = JSONArray()
             for (ac in states) arr.put(ac.toStateVector())
             root.put("states", arr)
+            val sats = JSONArray()
+            for (sat in satellites) {
+                sats.put(
+                    JSONArray()
+                        .put(sat.name)
+                        .put(sat.lat)
+                        .put(sat.lon)
+                )
+            }
+            root.put("sats", sats)
             File(dir, "snapshot-$now.json").writeText(root.toString())
             prune()
         }
@@ -43,7 +62,32 @@ class PlaybackStore(private val context: Context) {
                     .put("time", root.optLong("time"))
                     .put("states", root.optJSONArray("states") ?: JSONArray())
                     .toString()
-                out.add(Snapshot(root.optLong("time"), parseAircraftStates(body)))
+                val sats = ArrayList<SatellitePosition>()
+                val satsJson = root.optJSONArray("sats")
+                if (satsJson != null) {
+                    for (i in 0 until satsJson.length()) {
+                        val s = satsJson.optJSONArray(i) ?: continue
+                        if (s.length() < 3) continue
+                        sats.add(
+                            SatellitePosition(
+                                name = s.optString(0),
+                                noradId = 0,
+                                group = "",
+                                lat = s.optDouble(1),
+                                lon = s.optDouble(2),
+                                altitudeKm = 0.0,
+                                velocityKmS = null
+                            )
+                        )
+                    }
+                }
+                out.add(
+                    Snapshot(
+                        root.optLong("time"),
+                        parseAircraftStates(body),
+                        sats
+                    )
+                )
             } catch (e: Exception) {
                 // Corrupt snapshot: skip it, keep the rest.
             }

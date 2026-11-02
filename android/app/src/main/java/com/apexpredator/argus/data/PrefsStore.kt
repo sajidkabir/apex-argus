@@ -112,6 +112,25 @@ class PrefsStore(private val context: Context) {
         context.argusDataStore.edit { it[KEY_LOCAL_FEED_URL] = url.trim() }
     }
 
+    // Public sightings channel (v2.5): posters the user hid locally.
+    // Hiding is local only: it never reports or deletes anyone else's
+    // public post, it just keeps that poster's posts off this phone.
+    val hiddenSightingPosters: Flow<Set<String>> =
+        context.argusDataStore.data.map { it[KEY_HIDDEN_SIGHTING_POSTERS] ?: emptySet() }
+
+    suspend fun toggleHiddenSightingPoster(hex: String) {
+        val clean = hex.trim().lowercase()
+        context.argusDataStore.edit { prefs ->
+            val current = prefs[KEY_HIDDEN_SIGHTING_POSTERS] ?: emptySet()
+            prefs[KEY_HIDDEN_SIGHTING_POSTERS] =
+                if (clean in current) current - clean else current + clean
+        }
+    }
+
+    suspend fun clearHiddenSightingPosters() {
+        context.argusDataStore.edit { it[KEY_HIDDEN_SIGHTING_POSTERS] = emptySet() }
+    }
+
     companion object {
         const val DEFAULT_REFRESH_SECONDS = 180
         private val KEY_WATCHED_AIRCRAFT = stringSetPreferencesKey("watched_aircraft")
@@ -126,5 +145,6 @@ class PrefsStore(private val context: Context) {
         private val KEY_LAST_EMERGENCY_ALERT = stringPreferencesKey("last_emergency_alert")
         private val KEY_LOCAL_FEED_ENABLED = booleanPreferencesKey("local_feed_enabled")
         private val KEY_LOCAL_FEED_URL = stringPreferencesKey("local_feed_url")
+        private val KEY_HIDDEN_SIGHTING_POSTERS = stringSetPreferencesKey("hidden_sighting_posters")
     }
 }
