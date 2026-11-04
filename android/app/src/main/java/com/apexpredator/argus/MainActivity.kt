@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.apexpredator.argus.data.AlertScheduler
+import com.apexpredator.argus.data.WeatherChangeScheduler
 import com.apexpredator.argus.ui.AppNav
 import com.apexpredator.argus.ui.theme.ApexArgusTheme
 import org.osmdroid.config.Configuration
@@ -18,10 +19,16 @@ class MainActivity : ComponentActivity() {
         // recreated, on every launch, and no-ops until the user
         // allows notifications and leaves a type switched on.
         AlertScheduler.schedule(this)
+        // Weather-change alerts (v2.6): kept, not recreated, on
+        // every launch, like the balcony alerts above.
+        WeatherChangeScheduler.schedule(this)
         enableEdgeToEdge()
+        // Home-screen widget taps carry the tab to open; anything
+        // else starts on Tools, as before.
+        val initialTab = intent?.getStringExtra("argus_tab") ?: "tools"
         setContent {
             ApexArgusTheme {
-                AppNav()
+                AppNav(initialTab = initialTab)
             }
         }
     }
