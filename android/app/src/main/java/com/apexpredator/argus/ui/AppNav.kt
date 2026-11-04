@@ -48,12 +48,14 @@ import androidx.navigation.compose.rememberNavController
 import com.apexpredator.argus.ui.screens.AirportsScreen
 import com.apexpredator.argus.ui.screens.CamsScreen
 import com.apexpredator.argus.ui.screens.ChatScreen
+import com.apexpredator.argus.ui.screens.DiaryScreen
 import com.apexpredator.argus.ui.screens.HistoryScreen
 import com.apexpredator.argus.ui.screens.LogbookScreen
 import com.apexpredator.argus.ui.screens.HomeScreen
 import com.apexpredator.argus.ui.screens.NearMeScreen
 import com.apexpredator.argus.ui.screens.RadarScreen
 import com.apexpredator.argus.ui.screens.ResultScreen
+import com.apexpredator.argus.ui.screens.SightingsScreen
 import com.apexpredator.argus.ui.screens.SkyScreen
 import com.apexpredator.argus.ui.screens.SpotterScreen
 
@@ -117,7 +119,7 @@ private val TABS = listOf(
 private val TAB_ROUTES = TABS.map { it.route }.toSet()
 
 @Composable
-fun AppNav(vm: MainViewModel = viewModel()) {
+fun AppNav(vm: MainViewModel = viewModel(), initialTab: String = "tools") {
     val navController = rememberNavController()
     // Activity-scoped so the Airports tab can aim the radar and open an
     // airport's board on the shared radar state.
@@ -126,6 +128,7 @@ fun AppNav(vm: MainViewModel = viewModel()) {
     val spotterVm: SpotterViewModel = viewModel(viewModelStoreOwner = activity)
     val skyVm: SkyViewModel = viewModel(viewModelStoreOwner = activity)
     val logbookVm: LogbookViewModel = viewModel(viewModelStoreOwner = activity)
+    val diaryVm: DiaryViewModel = viewModel(viewModelStoreOwner = activity)
     var camsTarget by remember {
         mutableStateOf<Pair<Double, Double>?>(null)
     }
@@ -161,7 +164,7 @@ fun AppNav(vm: MainViewModel = viewModel()) {
     ) { scaffoldPadding ->
         NavHost(
             navController = navController,
-            startDestination = "tools",
+            startDestination = if (initialTab in TAB_ROUTES) initialTab else "tools",
             modifier = Modifier.padding(scaffoldPadding)
         ) {
             composable("tools",
@@ -188,7 +191,9 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                         camsTarget = null
                         navController.navigate("cams")
                     },
-                    onOpenLogbook = { navController.navigate("logbook") }
+                    onOpenLogbook = { navController.navigate("logbook") },
+                    onOpenSightings = { navController.navigate("sightings") },
+                    onOpenDiary = { navController.navigate("diary") }
                 )
             }
             composable("radar",
@@ -312,6 +317,31 @@ fun AppNav(vm: MainViewModel = viewModel()) {
                 LogbookScreen(
                     vm = logbookVm,
                     onBack = { navController.popBackStack() }
+                )
+            }
+            composable("sightings",
+                enterTransition = tabEnter,
+                exitTransition = tabExit,
+                popEnterTransition = tabPopEnter,
+                popExitTransition = tabPopExit) {
+                SightingsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("diary",
+                enterTransition = tabEnter,
+                exitTransition = tabExit,
+                popEnterTransition = tabPopEnter,
+                popExitTransition = tabPopExit) {
+                DiaryScreen(
+                    vm = diaryVm,
+                    radarVm = radarVm,
+                    onBack = { navController.popBackStack() },
+                    onShowOnRadar = { ac ->
+                        radarVm.centerOn(ac.latitude, ac.longitude, 9.0)
+                        radarVm.selectAircraft(ac)
+                        goTab("radar")
+                    }
                 )
             }
             composable("history",

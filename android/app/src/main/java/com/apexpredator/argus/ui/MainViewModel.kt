@@ -23,6 +23,7 @@ import com.apexpredator.argus.data.RegionPackStore
 import com.apexpredator.argus.data.RegionPackSummary
 import com.apexpredator.argus.data.ReportKind
 import com.apexpredator.argus.data.SatelliteRepository
+import com.apexpredator.argus.data.WeatherChangeScheduler
 import com.apexpredator.argus.data.formatBytes
 import com.apexpredator.argus.data.isPackStale
 import com.apexpredator.argus.data.packAgeText
@@ -94,6 +95,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var alertEmergency by mutableStateOf(true)
         private set
 
+    // Weather-change alerts (v2.6), mirrored from DataStore.
+    var weatherAlert by mutableStateOf(true)
+        private set
+
     // Morning briefing: one plain-English line per watched airport.
     var briefingMetars by mutableStateOf<List<String>>(emptyList())
         private set
@@ -140,6 +145,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             prefs.alertEmergency.collect { alertEmergency = it }
         }
+        viewModelScope.launch {
+            prefs.weatherAlert.collect { weatherAlert = it }
+        }
     }
 
     fun updateAlertSatPass(on: Boolean) {
@@ -160,6 +168,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             prefs.setAlertEmergency(on)
             if (on) AlertScheduler.schedule(getApplication())
+        }
+    }
+
+    fun updateWeatherAlert(on: Boolean) {
+        viewModelScope.launch {
+            prefs.setWeatherAlert(on)
+            if (on) WeatherChangeScheduler.schedule(getApplication())
         }
     }
 
