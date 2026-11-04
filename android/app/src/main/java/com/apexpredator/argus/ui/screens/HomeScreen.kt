@@ -76,6 +76,8 @@ fun HomeScreen(
     onOpenAirports: () -> Unit = {},
     onOpenCams: () -> Unit = {},
     onOpenLogbook: () -> Unit = {},
+    onOpenSightings: () -> Unit = {},
+    onOpenDiary: () -> Unit = {},
 ) {
     LaunchedEffect(Unit) {
         vm.checkForUpdates()
@@ -110,6 +112,8 @@ fun HomeScreen(
             MorningBriefingCard(vm = vm, skyVm = skyVm, radarVm = radarVm)
 
             AlertSettingsCard(vm = vm)
+
+            DiaryCard(onOpenDiary = onOpenDiary)
 
             LocalFeedCard(radarVm = radarVm)
 
@@ -249,6 +253,9 @@ fun HomeScreen(
                         OutlinedButton(onClick = onOpenHistory) { Text("Decode history") }
                         OutlinedButton(onClick = onOpenLogbook) { Text("Logbook") }
                     }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onOpenSightings) { Text("Community sightings") }
+                    }
                 }
             }
         }
@@ -375,6 +382,20 @@ private fun AlertSettingsCard(vm: MainViewModel) {
                 checked = vm.alertEmergency,
                 onChange = { vm.updateAlertEmergency(it) },
             )
+            AlertToggleRow(
+                label = "Weather change at watched airports",
+                checked = vm.weatherAlert,
+                onChange = { vm.updateWeatherAlert(it) },
+            )
+            Text(
+                "Weather changes are checked every 15 minutes in the " +
+                    "background: wind shift, visibility drop, new CB " +
+                    "or TS, or a SPECI. Only watched airports are " +
+                    "checked, and the notification states the change " +
+                    "in plain English.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
             if (!granted) {
                 Text(
                     "Notifications are off for Apex Argus, so no " +
@@ -401,6 +422,41 @@ private fun AlertSettingsCard(vm: MainViewModel) {
                         }
                     ) { Text("Open app settings") }
                 }
+            }
+        }
+    }
+}
+
+// v2.6 flight diary: the traveller's own flights, matched against
+// live traffic by callsign. The card only opens the diary; the
+// diary screen itself carries the honest tracking note.
+@Composable
+private fun DiaryCard(onOpenDiary: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Flight diary",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "Your own flights, past and upcoming, with live " +
+                    "position on the radar when airborne and in free " +
+                    "coverage. Add the home-screen widget for the " +
+                    "next pass, nearest aircraft and airport weather " +
+                    "at a glance.",
+                style = MaterialTheme.typography.bodySmall,
+                color = ApexTextSecondary
+            )
+            Button(onClick = onOpenDiary, modifier = Modifier.fillMaxWidth()) {
+                Text("Open flight diary")
             }
         }
     }
