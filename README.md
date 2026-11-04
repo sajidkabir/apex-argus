@@ -30,6 +30,26 @@ progress).
 
 **Six tabs: Radar · Spotter · Sky · Airports · Tools · Chat**
 
+**Flight diary, weather-change alerts and home-screen widget (v2.6)**
+
+- Flight diary (Tools): add your own flights (airline plus flight
+  number, date, optional route). When a flight is airborne and in
+  free coverage, Argus matches it by callsign, shows its live
+  position, type and registration, and offers "Show on radar". The
+  status is only what free data can prove: Scheduled, Airborne, On
+  ground, or Not tracked live. A flight that does not appear is
+  never silently called landed, because free coverage misses
+  flights and absence proves neither a landing nor a cancellation
+- Weather-change alerts (Tools): one toggle for all watched
+  airports. Every 15 minutes in the background, Argus compares the
+  latest METAR with the previous one and notifies on material
+  changes only: wind shift, visibility drop below a threshold, new
+  CB or thunderstorm, or a SPECI, stated in plain English
+- Home-screen widget: next satellite pass over your location,
+  nearest airborne aircraft, and home or watched airport weather
+  in one glanceable card, updating every 30 minutes. Tap a row to
+  open Sky, Radar or Tools
+
 **Radar timelapse export and community sightings (v2.5)**
 
 - Timelapse export: open the radar playback bar and export the

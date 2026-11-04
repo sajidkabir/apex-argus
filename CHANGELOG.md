@@ -4,6 +4,57 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [2.6.0] - 2026-11-04
+
+The traveller release: Argus keeps your own flights, watches the
+weather at the airports you watch, and puts the sky on your home
+screen. This release also completes the v2.1 to v2.6 roadmap
+approved on 2026-10-22.
+
+### Added
+
+- Passenger flight diary: add a flight (airline plus flight number,
+  date, optional route) from Tools. Argus matches it against live
+  traffic by callsign using the existing enrichment and OpenSky
+  data, shows its live position on the radar, plus aircraft type
+  and registration when enrichment knows them, and keeps a diary
+  list of past and upcoming flights. Status is only what free data
+  can prove: Scheduled, Airborne, On ground, or Not tracked live.
+  A flight that does not appear is never silently called landed:
+  free coverage misses flights, and absence proves neither a
+  landing nor a cancellation, so the diary says so in plain words.
+  A live match has a "Show on radar" button that centres the radar
+  on the aircraft and opens its detail sheet.
+- Weather-change alerts for watched airports: a background check
+  every 15 minutes (WorkManager) comparing the latest METAR against
+  the previous one per watched airport. It notifies on material
+  changes only: a wind shift of 30 degrees or more, a wind speed
+  change of 10 kt or more, gusts appearing or changing by 10 kt or
+  more, a visibility drop below a threshold (10,000, 5,000, 3,000,
+  1,500, 1,000, 550 or 200 m), newly reported cumulonimbus or
+  thunderstorm, or a SPECI special observation. The notification
+  states the change in plain English. One toggle in Tools covers
+  all watched airports, and the same correct notification-permission
+  handling as the balcony alerts applies: with notifications denied,
+  nothing posts.
+- Home-screen widget: next satellite pass over your location,
+  nearest airborne aircraft, and home or watched airport weather
+  in one glanceable card, updating every 30 minutes (the platform
+  minimum). Tapping the pass row opens Sky, the aircraft row opens
+  Radar, and the weather row opens Tools. Location falls back to
+  Dhaka when no fix is available, the same fallback the Sky tab
+  uses, and a failed fetch shows a plain "open Argus to refresh"
+  line instead of stale-looking data.
+
+### Notes
+
+- The v2.5 tag and release never completed: the v2.5 code landed
+  on main in parts and no v2.5 release was cut, so the public
+  latest APK stayed at v2.4.0. This v2.6.0 release ships the
+  remaining v2.5 code (community sightings) together with the
+  traveller features, and the in-app updater jumps straight from
+  v2.4.0 to v2.6.0.
+
 ## [2.5.0] - 2026-11-02
 
 The community release: the radar recording becomes a video you can
