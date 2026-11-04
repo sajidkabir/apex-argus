@@ -159,6 +159,14 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
         private set
     val inPlayback: Boolean get() = playbackIndex != null
 
+    // ---- Timelapse export (v2.5) ----
+    var timelapseWorking by mutableStateOf(false)
+        private set
+    var timelapseFile by mutableStateOf<java.io.File?>(null)
+        private set
+    var timelapseStatus by mutableStateOf<String?>(null)
+        private set
+
     private var lastBbox: BoundingBox? = null
     private var fetchJob: Job? = null
     private var debounceJob: Job? = null
@@ -396,7 +404,8 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
                     it.icao24 to (it.latitude to it.longitude)
                 }
                 liveAircraft = merged
-                viewModelScope.launch { playbackStore.record(merged) }
+                val satsNow = satellites
+                viewModelScope.launch { playbackStore.record(merged, satsNow) }
                 selected?.let { sel ->
                     selected = merged.firstOrNull { it.icao24 == sel.icao24 }
                 }
@@ -593,6 +602,44 @@ class RadarViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setPlaybackIndex(index: Int) {
         playbackIndex = index.coerceIn(0, snapshots.lastIndex.coerceAtLeast(0))
+    }
+
+    // Renders the recorded frames to an MP4 and keeps it in the app
+    // cache for the share sheet. frameLimit caps the video length:
+    // 0 means every recorded frame.
+    fun exportTimelapse(frameLimit: Int) {
+        if (timelapseWorking) return
+        val frames = if (frameLimit > 0) snapshots.takeLast(frameLimit) else snapshots
+        if (frames.size < 2) {
+            timelapseStatus = "Need at least 2 recorded frames. " +
+                "Keep the radar open longer, then try again."
+            return
+        }
+        timelapseWorking = true
+        timelapseStatus = "Rendering video..."
+        timelapseFile = null
+        viewModelScope.launch(Dispatchers.IO) {
+            val app = getApplication<Application>()
+            var failReason: String? = null
+            val file = com.apexpredator.argus.data.TimelapseExporter.export(app, frames) { reason ->
+                failReason = reason
+            }
+            withContext(Dispatchers.Main) {
+                timelapseWorking = false
+                if (file != null) {
+                    timelapseFile = file
+                    timelapseStatus = "Video ready: ${frames.size} frames " +
+                        "over ${formatTimelapseSpan(frames)}."
+                } else {
+                    timelapseStatus = failReason ?: "Video export failed. Try again."
+                }
+            }
+        }
+    }
+
+    private fun formatTimelapseSpan(frames: List<Snapshot>): String {
+        val spanMin = (frames.last().epochMs - frames.first().epochMs) / 60_000
+        return if (spanMin < 1) "under a minute" else "$spanMin minutes"
     }
 
     private fun defaultBbox(c: MapCenter): BoundingBox {
