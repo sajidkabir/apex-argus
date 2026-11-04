@@ -1,5 +1,7 @@
 package com.apexpredator.argus.ui.screens
 
+import android.content.Intent
+import androidx.core.content.FileProvider
 import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -674,6 +678,9 @@ private fun LayerSwitch(label: String, checked: Boolean, onChange: (Boolean) -> 
 private fun PlaybackBar(vm: RadarViewModel) {
     val snaps = vm.snapshots
     val idx = vm.playbackIndex ?: 0
+    val context = LocalContext.current
+    // Timelapse export (v2.5): 0 means every recorded frame.
+    var frameLimit by remember { mutableStateOf(0) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -707,6 +714,76 @@ private fun PlaybackBar(vm: RadarViewModel) {
                     onValueChange = { vm.setPlaybackIndex(it.roundToInt()) },
                     valueRange = 0f..(snaps.size - 1).toFloat(),
                     steps = (snaps.size - 2).coerceAtLeast(0)
+                )
+            }
+            // Timelapse export: renders the recorded frames (aircraft
+            // plus satellites) to an MP4 on a canvas, then shares it.
+            // The recording window is the playback window itself: the
+            // frames collected since the radar started recording.
+            Text(
+                "Timelapse export",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Frames:", style = MaterialTheme.typography.bodySmall)
+                FilterChip(
+                    selected = frameLimit == 0,
+                    onClick = { frameLimit = 0 },
+                    label = { Text("All") }
+                )
+                FilterChip(
+                    selected = frameLimit == 30,
+                    onClick = { frameLimit = 30 },
+                    label = { Text("Last 30") }
+                )
+                FilterChip(
+                    selected = frameLimit == 10,
+                    onClick = { frameLimit = 10 },
+                    label = { Text("Last 10") }
+                )
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { vm.exportTimelapse(frameLimit) },
+                    enabled = !vm.timelapseWorking && snaps.size >= 2
+                ) {
+                    Text(if (vm.timelapseWorking) "Rendering..." else "Export video")
+                }
+                val videoFile = vm.timelapseFile
+                if (videoFile != null) {
+                    OutlinedButton(
+                        onClick = {
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                context.packageName + ".fileprovider",
+                                videoFile
+                            )
+                            val send = Intent(Intent.ACTION_SEND).apply {
+                                type = "video/mp4"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(
+                                Intent.createChooser(send, "Share timelapse video")
+                            )
+                        }
+                    ) {
+                        Text("Share video")
+                    }
+                }
+            }
+            vm.timelapseStatus?.let { status ->
+                Text(
+                    status,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ApexTextSecondary
                 )
             }
         }
