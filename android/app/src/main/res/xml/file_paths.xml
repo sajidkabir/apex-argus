@@ -2,4 +2,6 @@
 <paths>
     <!-- Downloaded update APKs, shared with the system installer. -->
     <external-files-path name="updates" path="updates/" />
+    <!-- Timelapse MP4 exports (v2.5), shared with the system share sheet. -->
+    <cache-path name="timelapse" path="timelapse/" />
 </paths>
