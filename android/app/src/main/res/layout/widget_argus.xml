@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home-screen widget layout (v2.6). RemoteViews only supports a
+     limited view set, so this is plain LinearLayouts and TextViews:
+     one row per glanceable item, each row tapping into its tab. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="#FF1B1F24">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Apex Argus"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFFFF" />
+
+    <LinearLayout
+        android:id="@+id/widget_pass_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="8dp">
+        <TextView
+            android:id="@+id/widget_pass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Next pass: loading..."
+            android:textSize="13sp"
+            android:textColor="#FFFFFFFF" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_aircraft_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="4dp">
+        <TextView
+            android:id="@+id/widget_aircraft"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nearest aircraft: loading..."
+            android:textSize="13sp"
+            android:textColor="#FFFFFFFF" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_weather_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="4dp">
+        <TextView
+            android:id="@+id/widget_weather"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Airport weather: loading..."
+            android:textSize="13sp"
+            android:textColor="#FFFFFFFF" />
+    </LinearLayout>
+
+</LinearLayout>
