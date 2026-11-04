@@ -46,6 +46,12 @@ class PrefsStore(private val context: Context) {
     val lastEmergencyAlertKey: Flow<String?> =
         context.argusDataStore.data.map { it[KEY_LAST_EMERGENCY_ALERT] }
 
+    // Weather-change alerts (v2.6): one toggle for all watched
+    // airports, on by default. The worker only ever checks watched
+    // airports, and posts nothing when notifications are denied.
+    val weatherAlert: Flow<Boolean> =
+        context.argusDataStore.data.map { it[KEY_WEATHER_ALERT] ?: true }
+
     // Own ADS-B receiver (v2.4): off until the user types an endpoint
     // and enables it. The address stays on the phone and is only ever
     // fetched from the app itself, on the user's own network.
@@ -90,6 +96,10 @@ class PrefsStore(private val context: Context) {
 
     suspend fun setAlertEmergency(on: Boolean) {
         context.argusDataStore.edit { it[KEY_ALERT_EMERGENCY] = on }
+    }
+
+    suspend fun setWeatherAlert(on: Boolean) {
+        context.argusDataStore.edit { it[KEY_WEATHER_ALERT] = on }
     }
 
     suspend fun setLastSatAlertKey(key: String) {
@@ -143,6 +153,7 @@ class PrefsStore(private val context: Context) {
         private val KEY_LAST_SAT_ALERT = stringPreferencesKey("last_sat_alert")
         private val KEY_LAST_HEAVY_ALERT = stringPreferencesKey("last_heavy_alert")
         private val KEY_LAST_EMERGENCY_ALERT = stringPreferencesKey("last_emergency_alert")
+        private val KEY_WEATHER_ALERT = booleanPreferencesKey("weather_alert")
         private val KEY_LOCAL_FEED_ENABLED = booleanPreferencesKey("local_feed_enabled")
         private val KEY_LOCAL_FEED_URL = stringPreferencesKey("local_feed_url")
         private val KEY_HIDDEN_SIGHTING_POSTERS = stringSetPreferencesKey("hidden_sighting_posters")
